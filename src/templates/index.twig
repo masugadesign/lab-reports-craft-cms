@@ -1,0 +1,26 @@
+{% extends '_layouts/elementindex' %}
+{% set title = 'Lab Reports'|t %}
+{% set elementType = 'Masuga\\LabReports\\elements\\ReportConfigured' %}
+
+{% set tabs = {
+	reportsconfigured: { label: "Configured Reports"|t, url: url('lab-reports') },
+	generatedReports: { label: "Generated Reports"|t, url: url('lab-reports/generated-reports') }
+} %}
+
+{% set selectedTab = 'reportsconfigured' %}
+
+{% set crumbs = {
+	reportsconfigured: { label: "Lab Reports"|t, url: url('lab-reports') }
+} %}
+
+{% block sidebar %}
+	<div class="buttons">
+		<a class="btn submit add icon" href="{{ url('labreports/configure') }}">{{ "New Report"|t }}</a>
+		<div class="menu">
+			<ul>
+				<li></li>
+			</ul>
+		</div>
+	</div>
+	{{ parent() }}
+{% endblock %}

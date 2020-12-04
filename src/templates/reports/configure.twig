@@ -1,0 +1,64 @@
+{% extends "_layouts/cp" %}
+{% set title = "Configure Report" %}
+{% import "_includes/forms" as forms %}
+
+{% set crumbs = {
+	configuredReports: { label: "Configured Reports"|t, url: url('labreports') }
+} %}
+
+{% block content %}
+
+<form action="" method="post" >
+	{{ csrfInput() }}
+	{{ actionInput('labreports/cp/configure-submit') }}
+
+	{{ forms.textField({
+		first: true,
+		label: "Title"|t,
+		id: 'reportTitle',
+		name: 'title',
+		required: true,
+		instructions: "The configured report's title."|t,
+		autofocus: true,
+		value: report ? report.title : '',
+		errors: customField.getErrors('title')
+	}) }}
+
+	{{ forms.textField({
+		label: "Description"|t,
+		id: 'reportDescription',
+		name: 'reportDescription',
+		required: false,
+		instructions: ""|t,
+		value: report ? report.reportDescription : '',
+		errors: customField.getErrors('reportDescription')
+	}) }}
+
+	{{ forms.textField({
+		first: true,
+		label: "Template"|t,
+		id: 'reportTemplate',
+		name: 'template',
+		required: true,
+		instructions: "Which template contains the report's code?"|t,
+		autofocus: true,
+		value: report ? report.template : '',
+		errors: customField.getErrors('template')
+	}) }}
+
+	{{ forms.textField({
+		first: true,
+		label: "Formatting Function Name"|t,
+		id: 'reportFormatFunction',
+		name: 'formatFunction',
+		required: true,
+		instructions: "Advanced reports require a function name from the labreports.php config file."|t,
+		autofocus: true,
+		value: report ? report.formatFunction : '',
+		errors: customField.getErrors('formatFunction')
+	}) }}
+
+	<input type="submit" class="btn submit" value="{{ report ? 'Update' : 'Create' }}" >
+</form>
+
+{% endblock %}

@@ -31,7 +31,7 @@ class LabReports extends Plugin
 	 * Enables the plugin settings form.
 	 * @var boolean
 	 */
-	public $hasCpSettings = true;
+	public $hasCpSettings = false;
 
 	/**
 	 * The name of the plugin as it appears in the Craft control panel and
@@ -40,7 +40,7 @@ class LabReports extends Plugin
 	 */
 	public function getName()
 	{
-		 return Craft::t('lab-reports', 'Lab Reports');
+		 return Craft::t('labreports', 'Lab Reports');
 	}
 
 	/**
@@ -50,7 +50,7 @@ class LabReports extends Plugin
 	 */
 	public function getDescription(): string
 	{
-		return Craft::t('lab-reports', 'Custom content/data reporting for Craft CMS.');
+		return Craft::t('labreports', 'Custom content/data reporting for Craft CMS.');
 	}
 
 	/**
@@ -68,7 +68,7 @@ class LabReports extends Plugin
 	 */
 	protected function settingsHtml(): string
 	{
-		return Craft::$app->getView()->renderTemplate('lab-reports/_settings', [
+		return Craft::$app->getView()->renderTemplate('labreports/_settings', [
 			'settings' => $this->getSettings()
 		]);
 	}
@@ -85,17 +85,19 @@ class LabReports extends Plugin
 		]);
 		// Register the Lab Reports plugin log though we probably won't use this.
 		$fileTarget = new FileTarget([
-			'logFile' => Craft::$app->getPath()->getLogPath().'/lab-reports.log',
-			'categories' => ['lab-reports']
+			'logFile' => Craft::$app->getPath()->getLogPath().'/labreports.log',
+			'categories' => ['labreports']
 		]);
 		// Load the template variables class.
 		Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function (Event $event) {
 			$variable = $event->sender;
-			$variable->set('lab-reports', LabReportsVariable::class);
+			$variable->set('labreports', LabReportsVariable::class);
 		});
 		// Register CP routes.
 		Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
-			$event->rules['lab-reports'] = 'lab-reports/cp/index';
+			$event->rules['labreports'] = 'labreports/cp/index';
+			$event->rules['labreports/configure'] = 'labreports/cp/configure';
+			$event->rules['labreports/run'] = 'labreports/cp/run';
 		});
 	}
 
