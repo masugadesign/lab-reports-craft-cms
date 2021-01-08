@@ -8,7 +8,7 @@ use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\db\ElementQueryInterface;
 use Masuga\LabReports\LabReports;
-use Masuga\LabReports\Report;
+use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\elements\db\ReportConfiguredQuery;
 use Masuga\LabReports\elements\actions\ReportConfiguredDelete;
 
@@ -183,6 +183,16 @@ class ReportConfigured extends Element
 	}
 
 	/**
+	 * @inheritdoc
+	 */
+	protected function defineRules(): array
+	{
+		$rules = parent::defineRules();
+		$rules[] = [['title', 'template'], 'required'];
+		return $rules;
+	}
+
+	/**
  	* @inheritdoc
  	* @throws Exception if existing record is not found.
  	*/
@@ -203,6 +213,20 @@ class ReportConfigured extends Element
 		$record->formatFunction = $this->formatFunction;
 		$status = $record->save();
 		parent::afterSave($isNew);
+	}
+
+	/**
+	 * This method executes the configured report and returns the generated report
+	 * if successful.
+	 * @return Report|null
+	 */
+	public function run()
+	{
+		$report = new Report($this->id);
+		$parsedReportTemplate = Craft::$app->getView()->renderTemplate($this->template, [
+			'report' => $report
+		]);
+		return $report->fileExists() ? Report : null;
 	}
 
 }

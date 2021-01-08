@@ -15,6 +15,10 @@ use Masuga\LabReports\elements\db\ReportQuery;
 class Reports extends Service
 {
 
+	/**
+	 * The batch size used when paginating through query results.
+	 * @var int
+	 */
 	private const BATCH_SIZE = 50;
 
 	public function init()
@@ -22,21 +26,22 @@ class Reports extends Service
 		parent::init();
 	}
 
+	/**
+	 * This method returns the system path to the report file storage folder.
+	 * @return string
+	 */
+	public function storagePath()
+	{
+		return $this->plugin->getSettings()->fileStorageFolder;
+	}
+
+	/**
+	 * This method executes a particular configured report.
+	 * @param ReportConfigured $rc
+	 */
 	public function run(ReportConfigured $rc)
 	{
 		$rc->run();
-	}
-
-	public function rows($array)
-	{
-		foreach($rows as &$row) {
-			$this->row($row);
-		}
-	}
-
-	public function row(array $row)
-	{
-
 	}
 
 	/**
@@ -93,6 +98,28 @@ class Reports extends Service
 	}
 
 	/**
+	 * This method creates/updates a RecordConfigured element depending on whether
+	 * or not an existing ID was supplied.
+	 * @param array $data
+	 * @param int $id
+	 * @return ReportConfigured
+	 */
+	public function saveReportConfigured($data, $id=null)
+	{
+		$rc = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
+		$saved = false;
+		// Check it is populated in case someone supplied a bad ID.
+		if ( $rc ) {
+			$rc->type = $data['type'] ?? $rc->type;
+			$rc->title = $data['title'] ?? $rc->title;
+			$rc->reportDescription = $data['reportDescription'] ?? $rc->reportDescription;
+			$rc->formatFunction = $data['formatFunction'] ?? $rc->formatFunction;
+			$saved = Craft::$app->getElements()->saveElement($rc);
+		}
+		return $rc;
+	}
+
+	/**
 	 * This method returns a ReportConfiguredQuery with the supplied criteria
 	 * applied to the query.
 	 * @param array $criteria
@@ -120,6 +147,38 @@ class Reports extends Service
 			Craft::configure($query, $criteria);
 		}
 		return $query;
+	}
+
+	/**
+	 * This method returns a format function by name if it is found in the config.
+	 * Otherwise, null is returned.
+	 * @param string $name
+	 * @return function|null
+	 */
+	public function formatFunction($name)
+	{
+		return $this->plugin->getConfigItem('functions')[$name] ?? null;
+	}
+
+	/**
+	 * This method returns the array of format functions from the plugin config.
+	 * @return array
+	 */
+	public function formatFunctions(): array
+	{
+		return $this->plugin->getConfigItem('functions');
+	}
+
+	/**
+	 * This method writes a report row to a designated filename. The system path
+	 * is determined by the plugin config.
+	 * @param string $filename
+	 * @param array $row
+	 */
+	public function writeRow($filename, $row)
+	{
+		$filePath = $this->storagePath().DIRECTORY_SEPARATOR.$filename;
+
 	}
 
 }

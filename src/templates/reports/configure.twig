@@ -6,11 +6,27 @@
 	configuredReports: { label: "Configured Reports"|t, url: url('labreports') }
 } %}
 
+{% set formatFunctions = {'' : 'Select Function...'}|merge(craft.labreports.formatFunctions) %}
+
 {% block content %}
 
 <form action="" method="post" >
 	{{ csrfInput() }}
 	{{ actionInput('labreports/cp/configure-submit') }}
+
+	{{ forms.selectField({
+		label: "Type",
+		id: "reportType",
+		name: "type",
+		required: true,
+		options: {
+			'' : 'Select Type...',
+			'basic' : 'Basic',
+			'advanced' : 'Advanced'
+		},
+		value: report ? report.type : '',
+		errors: report.getErrors('type')
+	}) }}
 
 	{{ forms.textField({
 		first: true,
@@ -19,9 +35,9 @@
 		name: 'title',
 		required: true,
 		instructions: "The configured report's title."|t,
-		autofocus: true,
+		autofocus: false,
 		value: report ? report.title : '',
-		errors: customField.getErrors('title')
+		errors: report.getErrors('title')
 	}) }}
 
 	{{ forms.textField({
@@ -31,7 +47,7 @@
 		required: false,
 		instructions: ""|t,
 		value: report ? report.reportDescription : '',
-		errors: customField.getErrors('reportDescription')
+		errors: report.getErrors('reportDescription')
 	}) }}
 
 	{{ forms.textField({
@@ -43,20 +59,23 @@
 		instructions: "Which template contains the report's code?"|t,
 		autofocus: true,
 		value: report ? report.template : '',
-		errors: customField.getErrors('template')
+		errors: report.getErrors('template')
 	}) }}
 
-	{{ forms.textField({
-		first: true,
-		label: "Formatting Function Name"|t,
-		id: 'reportFormatFunction',
-		name: 'formatFunction',
-		required: true,
-		instructions: "Advanced reports require a function name from the labreports.php config file."|t,
-		autofocus: true,
-		value: report ? report.formatFunction : '',
-		errors: customField.getErrors('formatFunction')
-	}) }}
+	<div id="reportFormatFunctionContainer" class="field" >
+		{{ forms.selectField({
+			first: true,
+			label: "Formatting Function Name"|t,
+			id: 'reportFormatFunction',
+			name: 'formatFunction',
+			required: true,
+			instructions: "Advanced reports require a function name from the labreports.php config file."|t,
+			autofocus: true,
+			options: craft.labreports.formatFunctionOptions,
+			value: report ? report.formatFunction : '',
+			errors: report.getErrors('formatFunction')
+		}) }}
+	</div>
 
 	<input type="submit" class="btn submit" value="{{ report ? 'Update' : 'Create' }}" >
 </form>

@@ -41,4 +41,21 @@ class LabReportsVariable
 		return $this->plugin->reports->generatedReportsQuery($criteria);
 	}
 
+	/**
+	 * This template variable returns an array of the available format functions
+	 * defined in the plugin config file.
+	 * @return array
+	 */
+	public function formatFunctions()
+	{
+		return $this->plugin->reports->formatFunctions();
+	}
+
+	public function formatFunctionOptions()
+	{
+		$opts = array_keys($this->plugin->reports->formatFunctions());
+		$options = ['' => 'Select Function...']+array_combine($opts, $opts);
+		return $options;
+	}
+
 }

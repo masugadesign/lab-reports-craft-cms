@@ -14,6 +14,7 @@ use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
 use Masuga\LabReports\models\Settings;
+use Masuga\LabReports\services\Reports;
 use Masuga\LabReports\variables\LabReportsVariable;
 use yii\base\Event;
 
@@ -31,7 +32,13 @@ class LabReports extends Plugin
 	 * Enables the plugin settings form.
 	 * @var boolean
 	 */
-	public $hasCpSettings = false;
+	public $hasCpSettings = true;
+
+	/**
+	 * The default config file array.
+	 * @var array
+	 */
+	public $defaultConfig = null;
 
 	/**
 	 * The name of the plugin as it appears in the Craft control panel and
@@ -54,6 +61,15 @@ class LabReports extends Plugin
 	}
 
 	/**
+	 * This method returns the settings form HTML content.
+	 * @return string
+	 */
+	protected function settingsHtml(): string
+	{
+		return Craft::$app->getView()->renderTemplate('labreports/_settings', []);
+	}
+
+	/**
 	 * This method returns the plugin's Settings model instance.
 	 * @return Settings
 	 */
@@ -63,25 +79,17 @@ class LabReports extends Plugin
 	}
 
 	/**
-	 * This method returns the settings form HTML content.
-	 * @return string
-	 */
-	protected function settingsHtml(): string
-	{
-		return Craft::$app->getView()->renderTemplate('labreports/_settings', [
-			'settings' => $this->getSettings()
-		]);
-	}
-
-	/**
 	 * The plugin's initialization function is responsible for registering event
 	 * handlers, routes and other plugin components.
 	 */
 	public function init()
 	{
 		parent::init();
+		// Load the default config.
+		$this->defaultConfig = require $this->getBasePath().DIRECTORY_SEPARATOR.'config.php';
 		// Initialize each of the services used by this plugin.
 		$this->setComponents([
+			'reports' => Reports::class
 		]);
 		// Register the Lab Reports plugin log though we probably won't use this.
 		$fileTarget = new FileTarget([
@@ -99,6 +107,27 @@ class LabReports extends Plugin
 			$event->rules['labreports/configure'] = 'labreports/cp/configure';
 			$event->rules['labreports/run'] = 'labreports/cp/run';
 		});
+	}
+
+	/**
+	 * This returns the entire plugin config array with any defined overrides.
+	 * @return array
+	 */
+	public function getConfig(): array
+	{
+		return array_merge($this->defaultConfig, Craft::$app->getConfig()->getConfigFromFile('labreports'));
+	}
+
+	/**
+	 * This method returns a plugin config value by key. It returns `null` if the
+	 * item is not defined.
+	 * @param string $key
+	 * @return mixed
+	 */
+	public function getConfigItem($key)
+	{
+		$config = $this->getConfig();
+		return $config[$key] ?? null;
 	}
 
 }

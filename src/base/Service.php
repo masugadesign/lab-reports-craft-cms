@@ -42,7 +42,7 @@ abstract class Service extends Component
 	{
 		$this->plugin = LabReports::getInstance();
 		$this->logPath = Craft::$app->getPath()->getLogPath().'/labreports.log';
-		$this->craftDevMode = Craft::$app->getConfig()->getGeneral()->devMode;
+		$this->craftDevMode = Craft::$app->config->getGeneral()->devMode;
 	}
 
 	/**

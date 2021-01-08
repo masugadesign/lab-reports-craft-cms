@@ -67,6 +67,13 @@ class Report extends Element
 		return $date;
 	}
 
+	/**
+	 * This method adds the row of column names to the report file. It is essentially
+	 * the same as addRow except that it does not include the column names row in
+	 * the totalRows tally.
+	 * @param array $columnNames
+	 * @return bool
+	 */
 	public function columns($columnNames): bool
 	{
 		return $this->plugin->reports->writeRow($columnNames)
@@ -82,19 +89,45 @@ class Report extends Element
 	{
 		$total = 0;
 		foreach($rows as &$row) {
-			$success = $this->plugin->reports->writeRow($this->filename, $row);
+			$success = $this->addRow($this->filename, $row);
 			$total += $success ? 1 : 0;
 		}
+		$this->totalRows += $total;
 		return $total;
 	}
 
 	/**
-	 * This method
-	 *
+	 * This method adds a single row to a generated report and returns a boolean
+	 * value for success/failure.
+	 * @param array $row
+	 * @return bool
 	 */
 	public function addRow($row): bool
 	{
-		return $this->plugin->reports->writeRow($this->filename, $row);
+		$success = $this->plugin->reports->writeRow($this->filename, $row);
+		$this->totalRows += $success ? 1 : 0;
+		return $success;
+	}
+
+	/**
+	 * This method returns the full system path to the report file whether or not
+	 * the file exists. If the filename has not been set, it returns null.
+	 * @return string
+	 */
+	public function filePath(): string
+	{
+		return $this->filename ? $this->plugin->reports->storagePath().DIRECTORY_SEPARATOR.$this->filename : null;
+	}
+
+	/**
+	 * This method checks whether or not the report file exists. If no filename
+	 * has been set, it automatically returns false.
+	 * @return bool
+	 */
+	public function fileExists(): bool
+	{
+		$filePath = $this->filePath();
+		return $filePath ? file_exists( $filePath ) : false;
 	}
 
 	/**
@@ -125,12 +158,12 @@ class Report extends Element
 
 	/**
 	 * This method sets the related _reportConfigured property.
-	 * @param ReportConfigured $asset
+	 * @param ReportConfigured $rc
 	 * @return $this
 	 */
-	public function setReportConfigured($cr)
+	public function setReportConfigured($rc)
 	{
-		$this->_reportConfigured = $cr;
+		$this->_reportConfigured = $rc;
 		return $this;
 	}
 
@@ -140,13 +173,13 @@ class Report extends Element
 	 */
 	public function getReportConfigured()
 	{
-		$cr = null;
+		$rc = null;
 		if ( $this->_reportConfigured !== null ) {
-			$cr = $this->_reportConfigured;
+			$rc = $this->_reportConfigured;
 		} elseif ( $this->_reportConfigured ) {
-			$cr = ReportConfigured::find()->id($this->assetId)->one();
+			$rc = ReportConfigured::find()->id($this->reportConfiguredId)->one();
 		}
-		return $cr;
+		return $rc;
 	}
 
 	/**
@@ -169,7 +202,7 @@ class Report extends Element
 			$map = (new Query())
 				->select(['id as source', 'reportConfiguredId as target'])
 				->from(['{{%labreports_reports}}'])
-				->where(['and', ['id' => $sourceElementIds], ['not', ['assetId' => null]]])
+				->where(['and', ['id' => $sourceElementIds], ['not', ['reportConfiguredId' => null]]])
 				->all();
 			return [
 				'elementType' => ReportConfigured::class,
@@ -188,8 +221,8 @@ class Report extends Element
 			$user = $elements[0] ?? null;
 			$this->setUser($user);
 		} elseif ($handle === 'configuredReport') {
-			$asset = $elements[0] ?? null;
-			$this->setConfiguredReport($asset);
+			$rc = $elements[0] ?? null;
+			$this->setReportConfigured($rc);
 		} else {
 			parent::setEagerLoadedElements($handle, $elements);
 		}
