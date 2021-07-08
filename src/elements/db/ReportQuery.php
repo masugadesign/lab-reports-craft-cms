@@ -12,6 +12,7 @@ class ReportQuery extends ElementQuery
 {
 
 	public $dateGenerated = null;
+	public $configuredReportId = null;
 	public $after = null;
 	public $before = null;
 
@@ -52,6 +53,9 @@ class ReportQuery extends ElementQuery
 		}
 		if ($this->dateGenerated) {
 			$this->subQuery->andWhere(Db::parseDateParam('labreports_reports.dateGenerated', $this->dateGenerated));
+		}
+		if ($this->configuredReportId) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.configuredReportId', $this->configuredReportId));
 		}
 		return parent::beforePrepare();
 	}

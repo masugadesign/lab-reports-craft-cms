@@ -35,23 +35,24 @@ class CpController extends Controller
 	/**
 	 * This method presents the user with a form to create/update a ReportConfigured
 	 * element.
+	 * @param ReportConfigured $report
 	 * @return Response
 	 */
-	public function actionConfigure(): Response
+	public function actionConfigure(ReportConfigured $report=null): Response
 	{
 		$id = Craft::$app->getRequest()->getParam('id');
-		$report = null;
-		if ( $id ) {
-			$report = ReportConfigured::find()->id($id)->one();
-		}
 		if ( ! $report ) {
-			$report = new ReportConfigured;
+			$report = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
 		}
 		return $this->renderTemplate('labreports/reports/configure', [
 			'report' => $report
 		]);
 	}
 
+	/**
+	 * This method handles configuring a new or existing
+	 *
+	 */
 	public function actionConfigureSubmit()
 	{
 		$this->requirePostRequest();
@@ -64,10 +65,11 @@ class CpController extends Controller
 		];
 		$rcId = $request->getParam('reportConfiguredId');
 		$rc = $this->plugin->reports->saveReportConfigured($data, $rcId);
-		if ( $rc ) {
+		if ( ! $rc->getErrors() ) {
 			$this->setSuccessFlash(Craft::t('labreports', 'Report configured successfully.'));
 			$response = $this->redirectToPostedUrl();
 		} else {
+			//exit("<pre>".print_r($rc->getErrors(),true)."</pre>");
 			$this->setFailFlash(Craft::t('labreports', 'Error configuring report.'));
 			Craft::$app->getUrlManager()->setRouteParams([
 				'report' => $rc

@@ -102,17 +102,18 @@ class Reports extends Service
 	 * or not an existing ID was supplied.
 	 * @param array $data
 	 * @param int $id
-	 * @return ReportConfigured
+	 * @return ReportConfigured|null
 	 */
-	public function saveReportConfigured($data, $id=null)
+	public function saveReportConfigured($data, $id=null): ?ReportConfigured
 	{
 		$rc = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
 		$saved = false;
 		// Check it is populated in case someone supplied a bad ID.
 		if ( $rc ) {
-			$rc->type = $data['type'] ?? $rc->type;
-			$rc->title = $data['title'] ?? $rc->title;
+			$rc->reportType = $data['reportType'] ?? $rc->type;
+			$rc->reportTitle = $data['reportTitle'] ?? $rc->title;
 			$rc->reportDescription = $data['reportDescription'] ?? $rc->reportDescription;
+			$rc->template = $data['template'] ?? $rc->template;
 			$rc->formatFunction = $data['formatFunction'] ?? $rc->formatFunction;
 			$saved = Craft::$app->getElements()->saveElement($rc);
 		}

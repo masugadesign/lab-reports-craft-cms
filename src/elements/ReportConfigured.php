@@ -11,6 +11,7 @@ use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\elements\db\ReportConfiguredQuery;
 use Masuga\LabReports\elements\actions\ReportConfiguredDelete;
+use Masuga\LabReports\records\ReportConfiguredRecord;
 
 class ReportConfigured extends Element
 {
@@ -118,7 +119,7 @@ class ReportConfigured extends Element
 	{
 		return [
 			'id' => Craft::t('labreports', 'ID'),
-			'title' => Craft::t('labreports', 'Title'),
+			'reportTitle' => Craft::t('labreports', 'Title'),
 			'reportDescription' => Craft::t('labreports', 'Description'),
 			'totalRan' => Craft::t('labreports', 'Generated Reports')
 		];
@@ -129,7 +130,7 @@ class ReportConfigured extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'title', 'reportDescription', 'totalRan'];
+		return ['id', 'reportTitle', 'reportDescription', 'totalRan'];
 	}
 
 	/**
@@ -188,7 +189,7 @@ class ReportConfigured extends Element
 	protected function defineRules(): array
 	{
 		$rules = parent::defineRules();
-		$rules[] = [['title', 'template'], 'required'];
+		$rules[] = [['reportTitle', 'template'], 'required'];
 		return $rules;
 	}
 
@@ -207,7 +208,8 @@ class ReportConfigured extends Element
 				throw new Exception('Invalid configured report ID: '.$this->id);
 			}
 		}
-		$record->title = $this->title;
+		$record->reportType = $this->reportType;
+		$record->reportTitle = $this->reportTitle;
 		$record->reportDescription = $this->reportDescription;
 		$record->template = $this->template;
 		$record->formatFunction = $this->formatFunction;

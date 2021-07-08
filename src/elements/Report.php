@@ -11,6 +11,7 @@ use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\ReportConfigured;
+use Masuga\LabReports\elements\db\ReportQuery;
 
 class Report extends Element
 {
@@ -39,6 +40,15 @@ class Report extends Element
 		parent::init();
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
 		$this->filename = $this->generateFilename();
+	}
+
+	/**
+     * @inheritdoc
+     * @return EntryQuery The newly created [[EntryQuery]] instance.
+     */
+	public static function find(): ElementQueryInterface
+	{
+		return new ReportQuery(static::class);
 	}
 
 	/**
@@ -76,7 +86,7 @@ class Report extends Element
 	 */
 	public function columns($columnNames): bool
 	{
-		return $this->plugin->reports->writeRow($columnNames)
+		return $this->plugin->reports->writeRow($columnNames);
 	}
 
 	/**

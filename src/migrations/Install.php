@@ -13,10 +13,10 @@ class Install extends Migration
 		if (!$this->db->tableExists('{{%labreports_configured_reports}}')) {
 			$this->createTable('{{%labreports_configured_reports}}', [
 				'id' => $this->primaryKey(),
-				'title' => $this->string(255),
+				'reportType' => $this->string(25),
+				'reportTitle' => $this->string(255),
 				'reportDescription' => $this->string(255),
 				'template' => $this->string(255),
-				'type' => $this->string(25),
 				'formatFunction' => $this->string(100),
 				'dateCreated' => $this->dateTime()->notNull(),
 				'dateUpdated' => $this->dateTime()->notNull(),

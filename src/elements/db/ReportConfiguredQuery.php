@@ -13,9 +13,9 @@ class ReportConfiguredQuery extends ElementQuery
 
 	public $after = null;
 	public $before = null;
-	public $title = null;
+	public $reportTitle = null;
 	public $reportDescription = null;
-	public $type = null;
+	public $reportType = null;
 	public $template = null;
 	public $formatFunction = null;
 
@@ -59,6 +59,17 @@ class ReportConfiguredQuery extends ElementQuery
 			$this->subQuery->andWhere(Db::parseDateParam('labreports_configured_reports.dateCreated', $this->dateCreated));
 		}
 		return parent::beforePrepare();
+	}
+
+	/**
+	 * Set the reportConfiguredId query parameter.
+	 * @param mixed $value
+	 * @return static self
+	 */
+	public function configuredReportId($value): ReportConfiguredQuery
+	{
+		$this->configuredReportId = $value;
+		return $this;
 	}
 
 }
