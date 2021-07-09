@@ -58,8 +58,9 @@ class CpController extends Controller
 		$this->requirePostRequest();
 		$request = Craft::$app->getRequest();
 		$data = [
-			'title' => $request->getParam('title'),
-			'description' => $request->getParam('reportDescription'),
+			'reportType' => $request->getParam('reportType'),
+			'reportTitle' => $request->getParam('reportTitle'),
+			'reportDescription' => $request->getParam('reportDescription'),
 			'template' => $request->getParam('template'),
 			'formatFunction' => $request->getParam('formatFunction'),
 		];
@@ -69,7 +70,6 @@ class CpController extends Controller
 			$this->setSuccessFlash(Craft::t('labreports', 'Report configured successfully.'));
 			$response = $this->redirectToPostedUrl();
 		} else {
-			//exit("<pre>".print_r($rc->getErrors(),true)."</pre>");
 			$this->setFailFlash(Craft::t('labreports', 'Error configuring report.'));
 			Craft::$app->getUrlManager()->setRouteParams([
 				'report' => $rc

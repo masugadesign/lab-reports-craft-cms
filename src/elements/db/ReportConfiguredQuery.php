@@ -11,13 +11,13 @@ use Masuga\LabReports\elements\ReportConfigured;
 class ReportConfiguredQuery extends ElementQuery
 {
 
-	public $after = null;
-	public $before = null;
+	public $reportType = null;
 	public $reportTitle = null;
 	public $reportDescription = null;
-	public $reportType = null;
 	public $template = null;
 	public $formatFunction = null;
+	public $after = null;
+	public $before = null;
 
 	/**
 	 * The instance of the Lab Reports plugin.
@@ -43,12 +43,27 @@ class ReportConfiguredQuery extends ElementQuery
 	{
 		$this->joinElementTable('labreports_configured_reports');
 
-		//$selectsArray = [];
-		//$this->query->select($selectsArray);
+		$selectsArray = [
+			"labreports_configured_reports.reportType",
+			"labreports_configured_reports.reportTitle",
+			"labreports_configured_reports.reportDescription",
+			"labreports_configured_reports.template",
+			"labreports_configured_reports.formatFunction",	
+		];
+		$this->query->select($selectsArray);
 
-		//if ($this->title) {
-		//	$this->subQuery->andWhere(Db::parseParam('labreports_configured_reports.title', $this->title));
-		//}
+		if ($this->reportType) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_configured_reports.reportType', $this->reportType));
+		}
+		if ($this->reportTitle) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_configured_reports.reportTitle', $this->reportTitle));
+		}
+		if ($this->template) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_configured_reports.template', $this->template));
+		}
+		if ($this->formatFunction) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_configured_reports.formatFunction', $this->formatFunction));
+		}
 		if ($this->after) {
 			$this->subQuery->andWhere(Db::parseDateParam('labreports_configured_reports.dateCreated', $this->after, '>'));
 		}
@@ -62,13 +77,46 @@ class ReportConfiguredQuery extends ElementQuery
 	}
 
 	/**
-	 * Set the reportConfiguredId query parameter.
+	 * This method assigns the `reportType` query parameter value.
 	 * @param mixed $value
-	 * @return static self
+	 * @return self
 	 */
-	public function configuredReportId($value): ReportConfiguredQuery
+	public function reportType($value): ReportConfiguredQuery
 	{
-		$this->configuredReportId = $value;
+		$this->reportType = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `reportTitle` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function reportTitle($value): ReportConfiguredQuery
+	{
+		$this->reportTitle = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `template` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function template($value): ReportConfiguredQuery
+	{
+		$this->template = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `formatFunction` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function formatFunction($value): ReportConfiguredQuery
+	{
+		$this->formatFunction = $value;
 		return $this;
 	}
 

@@ -55,9 +55,20 @@ class ReportQuery extends ElementQuery
 			$this->subQuery->andWhere(Db::parseDateParam('labreports_reports.dateGenerated', $this->dateGenerated));
 		}
 		if ($this->configuredReportId) {
-			$this->subQuery->andWhere(Db::parseParam('labreports_reports.configuredReportId', $this->configuredReportId));
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.reportConfiguredId', $this->configuredReportId));
 		}
 		return parent::beforePrepare();
+	}
+
+	/**
+	 * Set the reportConfiguredId query parameter.
+	 * @param mixed $value
+	 * @return static self
+	 */
+	public function configuredReportId($value): ReportQuery
+	{
+		$this->configuredReportId = $value;
+		return $this;
 	}
 
 }

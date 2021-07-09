@@ -24,8 +24,8 @@
 			'basic' : 'Basic',
 			'advanced' : 'Advanced'
 		},
-		value: report ? report.type : '',
-		errors: report.getErrors('type')
+		value: report ? report.reportType : '',
+		errors: report.getErrors('reportType')
 	}) }}
 
 	{{ forms.textField({
@@ -36,8 +36,8 @@
 		required: true,
 		instructions: "The configured report's title."|t,
 		autofocus: false,
-		value: report ? report.title : '',
-		errors: report.getErrors('title')
+		value: report ? report.reportTitle : '',
+		errors: report.getErrors('reportTitle')
 	}) }}
 
 	{{ forms.textField({

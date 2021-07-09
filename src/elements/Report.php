@@ -6,6 +6,7 @@ use Craft;
 use Exception;
 use craft\base\Element;
 use craft\elements\User;
+use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
@@ -21,6 +22,12 @@ class Report extends Element
 	public $totalRows = 0;
 	public $dateGenerated = null;
 	public $userId = null;
+
+	/**
+	 * The element query used to generate *advanced* reports.
+	 * @var ElementQuery
+	 */
+	private $query = null;
 
 	private $_user = null;
 
@@ -61,7 +68,7 @@ class Report extends Element
 	{
 		$localDate = $this->currentLocalDate()->format('YmdHis');
 		$reportConfigured = $this->getReportConfigured();
-		$title = StringHelper::slugify($reportConfigured->title);
+		$title = StringHelper::slugify($reportConfigured->reportTitle);
 		$filename = "{$title}-{$localDate}.{$ext}";
 		return $filename;
 	}
@@ -84,9 +91,20 @@ class Report extends Element
 	 * @param array $columnNames
 	 * @return bool
 	 */
-	public function columns($columnNames): bool
+	public function writeColumnHeaders(array $columnNames): bool
 	{
 		return $this->plugin->reports->writeRow($columnNames);
+	}
+
+	/**
+	 * This method executes the report by adding the column headers to the first
+	 * row of the file then by spawning a queue job that iterates over the query
+	 * results and appends them to the report file.
+	 */
+	public function execute(array $columnHeaders, ElementQuery $query)
+	{
+		$this->updateStatus('in_progress');
+		$headersAdded = $this->writeColumnHeaders($columnNames);
 	}
 
 	/**
@@ -236,6 +254,16 @@ class Report extends Element
 		} else {
 			parent::setEagerLoadedElements($handle, $elements);
 		}
+	}
+
+	/**
+	 * This method 
+	 *
+	 */
+	public function updateStatus($status): bool
+	{
+		$this->reportStatus = $status;
+		return Craft::$app->getElements()->saveElement($this);
 	}
 
 }

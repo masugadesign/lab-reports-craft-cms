@@ -110,8 +110,8 @@ class Reports extends Service
 		$saved = false;
 		// Check it is populated in case someone supplied a bad ID.
 		if ( $rc ) {
-			$rc->reportType = $data['reportType'] ?? $rc->type;
-			$rc->reportTitle = $data['reportTitle'] ?? $rc->title;
+			$rc->reportType = $data['reportType'] ?? $rc->reportType;
+			$rc->reportTitle = $data['reportTitle'] ?? $rc->reportTitle;
 			$rc->reportDescription = $data['reportDescription'] ?? $rc->reportDescription;
 			$rc->template = $data['template'] ?? $rc->template;
 			$rc->formatFunction = $data['formatFunction'] ?? $rc->formatFunction;

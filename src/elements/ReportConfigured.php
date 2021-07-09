@@ -7,6 +7,7 @@ use Exception;
 use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\db\ElementQueryInterface;
+use craft\helpers\UrlHelper;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\elements\db\ReportConfiguredQuery;
@@ -15,11 +16,12 @@ use Masuga\LabReports\records\ReportConfiguredRecord;
 
 class ReportConfigured extends Element
 {
-	public $title = null;
+	public $reportType = null;
+	public $reportTitle = null;
 	public $reportDescription = null;
 	public $template = null;
+	public $totalRan = null;
 	public $formatFunction = null;
-	public $type = null;
 
 	/**
 	 * Instance of the Lab Reports plugin.
@@ -70,7 +72,9 @@ class ReportConfigured extends Element
 	}
 
 	/**
-	 * Returns whether this element type has titles.
+	 * Returns whether this element type has titles. Though reports have "titles",
+	 * we are not using Craft's `content` table with these elements thus we are
+	 * using our own `reportTitle` column.
 	 * @return bool
 	 */
 	public static function hasTitles(): bool
@@ -97,14 +101,14 @@ class ReportConfigured extends Element
 			[
 				'key'      => 'basicReports',
 				'label'    => Craft::t('labreports', 'Basic Reports'),
-				'criteria' => ['type' => 'basic'],
-				'defaultSort' => ['labreports_configured_reports.title', 'asc']
+				'criteria' => ['reportType' => 'basic'],
+				'defaultSort' => ['labreports_configured_reports.reportTitle', 'asc']
 			],
 			[
 				'key'      => 'advancedReports',
 				'label'    => Craft::t('labreports', 'Advanced Reports'),
-				'criteria' => ['type' => 'advanced'],
-				'defaultSort' => ['labreports_configured_reports.dateCreated', 'desc']
+				'criteria' => ['reportType' => 'advanced'],
+				'defaultSort' => ['labreports_configured_reports.reportTitle', 'asc']
 			]
 		];
 		return $sources;
@@ -139,7 +143,7 @@ class ReportConfigured extends Element
 	protected static function defineSortOptions(): array
 	{
 		return [
-			'title' => Craft::t('labreports', 'File'),
+			'reportTitle' => Craft::t('labreports', 'File'),
 			'elements.dateCreated' => Craft::t('app', 'Date Created'),
 		];
 	}
@@ -155,6 +159,15 @@ class ReportConfigured extends Element
 	}
 
 	/**
+	 * This method returns the single report CP edit form URL.
+	 * @return string
+	 */
+	public function getCpEditUrl()
+	{
+		return UrlHelper::cpUrl('labreports/configure', ['id' => $this->id]);
+	}
+
+	/**
 	 * @inheritdoc
 	 */
 	protected function tableAttributeHtml(string $attribute): string
@@ -163,6 +176,9 @@ class ReportConfigured extends Element
 		switch ($attribute) {
 			case 'id':
 				$displayValue = $this->$attribute;
+			case 'reportTitle':
+				$cpEditUrl = $this->getCpEditUrl();
+				$displayValue = "<a href='{$cpEditUrl}' >{$this->reportTitle}</a>";
 			case 'totalRan':
 				$displayValue = Report::find()->configuredReportId($this->id)->count();
 			default:
@@ -189,7 +205,7 @@ class ReportConfigured extends Element
 	protected function defineRules(): array
 	{
 		$rules = parent::defineRules();
-		$rules[] = [['reportTitle', 'template'], 'required'];
+		$rules[] = [['reportType', 'reportTitle', 'template'], 'required'];
 		return $rules;
 	}
 
