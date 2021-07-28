@@ -9,6 +9,7 @@ use craft\web\Response;
 use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\elements\ReportConfigured;
 use Masuga\LabReports\LabReports;
+use Masuga\LabReports\queue\jobs\GenerateReport;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -27,9 +28,22 @@ class CpController extends Controller
 		$this->plugin = LabReports::getInstance();
 	}
 
+	/**
+	 * The "ReportConfigured" element index.
+	 * @return Response
+	 */
 	public function actionIndex(): Response
 	{
-		return $this->renderTemplate('labreports/index');
+		return $this->renderTemplate('labreports/reports-configured/index');
+	}
+
+	/**
+	 * The "Report" element index.
+	 * @return Response
+	 */
+	public function actionGeneratedReports(): Response
+	{
+		return $this->renderTemplate('labreports/reports-generated/index');
 	}
 
 	/**
@@ -44,7 +58,7 @@ class CpController extends Controller
 		if ( ! $report ) {
 			$report = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
 		}
-		return $this->renderTemplate('labreports/reports/configure', [
+		return $this->renderTemplate('labreports/reports-configured/configure', [
 			'report' => $report
 		]);
 	}
@@ -68,7 +82,7 @@ class CpController extends Controller
 		$rc = $this->plugin->reports->saveReportConfigured($data, $rcId);
 		if ( ! $rc->getErrors() ) {
 			$this->setSuccessFlash(Craft::t('labreports', 'Report configured successfully.'));
-			$response = $this->redirectToPostedUrl();
+			$response = Craft::$app->getResponse()->redirect($rc->getCpEditUrl());
 		} else {
 			$this->setFailFlash(Craft::t('labreports', 'Error configuring report.'));
 			Craft::$app->getUrlManager()->setRouteParams([
@@ -79,9 +93,22 @@ class CpController extends Controller
 		return $response;
 	}
 
+	/**
+	 * This controller action executes a ReportConfigured as a queue job.
+	 * @return Response
+	 */
 	public function actionRun(): Response
 	{
-
+		$queue = Craft::$app->getQueue();
+		$request = Craft::$app->getRequest();
+		$rcId = $request->getParam('reportConfiguredId');
+		$rc = $this->plugin->reports->getReportConfiguredById($rcId);
+		if ( ! $rc ) {
+			throw new NotFoundHttpException("Invalid ReportConfigured ID `{$rcId}`.");
+		}
+		$job = new GenerateReport(['reportConfiguredId' => $rc->id]);
+		$queue->delay(0)->push($job);
+		return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('labreports'));
 	}
 
 	/**
@@ -96,7 +123,7 @@ class CpController extends Controller
 		if ( ! $report ) {
 			throw new NotFoundHttpException("Invalid Generated Report ID: `{$id}`");
 		}
-		return $this->renderTemplate('labreports/reports/view', ['report' => $report]);
+		return $this->renderTemplate('labreports/reports-configured/view', ['report' => $report]);
 	}
 
 	/**

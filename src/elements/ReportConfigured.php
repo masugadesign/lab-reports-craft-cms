@@ -20,8 +20,9 @@ class ReportConfigured extends Element
 	public $reportTitle = null;
 	public $reportDescription = null;
 	public $template = null;
-	public $totalRan = null;
 	public $formatFunction = null;
+
+	private $_totalRan = null;
 
 	/**
 	 * Instance of the Lab Reports plugin.
@@ -50,16 +51,6 @@ class ReportConfigured extends Element
 	public static function find(): ElementQueryInterface
 	{
 		return new ReportConfiguredQuery(static::class);
-	}
-
-	/**
-	 * This method generates a Report element from this ReportConfigured element.
-	 * @return Report
-	 */
-	public function generate(): Report
-	{
-		$report = new Report($this->id);
-		$renderedTemplate = $this->renderTemplate($this->template);
 	}
 
 	/**
@@ -99,6 +90,11 @@ class ReportConfigured extends Element
 	{
 		$sources = [
 			[
+				'key'      => 'allReports',
+				'label'    => Craft::t('labreports', 'All Reports'),
+				'defaultSort' => ['labreports_configured_reports.reportTitle', 'asc']
+			],
+			[
 				'key'      => 'basicReports',
 				'label'    => Craft::t('labreports', 'Basic Reports'),
 				'criteria' => ['reportType' => 'basic'],
@@ -125,7 +121,8 @@ class ReportConfigured extends Element
 			'id' => Craft::t('labreports', 'ID'),
 			'reportTitle' => Craft::t('labreports', 'Title'),
 			'reportDescription' => Craft::t('labreports', 'Description'),
-			'totalRan' => Craft::t('labreports', 'Generated Reports')
+			'totalRan' => Craft::t('labreports', 'Generated Reports'),
+			'runUrl' => Craft::t('labreports', 'Run Report')
 		];
 	}
 
@@ -134,7 +131,7 @@ class ReportConfigured extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'reportTitle', 'reportDescription', 'totalRan'];
+		return ['id', 'reportTitle', 'reportDescription', 'totalRan', 'runUrl'];
 	}
 
 	/**
@@ -159,6 +156,16 @@ class ReportConfigured extends Element
 	}
 
 	/**
+	 * This method returns the full CP URL that generates an instance of this
+	 * ReportConfigured.
+	 * @return string
+	 */
+	public function getRunUrl()
+	{
+		return UrlHelper::cpUrl('labreports/run', ['id' => $this->id]);
+	}
+
+	/**
 	 * This method returns the single report CP edit form URL.
 	 * @return string
 	 */
@@ -176,13 +183,21 @@ class ReportConfigured extends Element
 		switch ($attribute) {
 			case 'id':
 				$displayValue = $this->$attribute;
+				break;
 			case 'reportTitle':
 				$cpEditUrl = $this->getCpEditUrl();
 				$displayValue = "<a href='{$cpEditUrl}' >{$this->reportTitle}</a>";
+				break;
 			case 'totalRan':
-				$displayValue = Report::find()->configuredReportId($this->id)->count();
+				$displayValue = (string) $this->getTotalRan();
+				break;
+			case 'runUrl':
+				$url = $this->getRunUrl();
+				$displayValue = "<a href='{$url}' >Run</a>";
+				break;
 			default:
 				$displayValue = parent::tableAttributeHtml($attribute);
+				break;
 		}
 		return (string) $displayValue;
 	}
@@ -234,17 +249,21 @@ class ReportConfigured extends Element
 	}
 
 	/**
-	 * This method executes the configured report and returns the generated report
-	 * if successful.
-	 * @return Report|null
+	 * This method returns the total number of times this report has been run.
+	 * @return int
 	 */
-	public function run()
+	public function getTotalRan(): int
 	{
-		$report = new Report($this->id);
-		$parsedReportTemplate = Craft::$app->getView()->renderTemplate($this->template, [
-			'report' => $report
-		]);
-		return $report->fileExists() ? Report : null;
+		$total = 0;
+		if ( is_numeric($this->_totalRan) ) {
+			$total = $this->_totalRan;
+		} else {
+			if ( $this->id ) {
+				$total = Report::find()->configuredReportId($this->id)->count();
+				$this->_totalRan = $total;
+			}
+		}
+		return $total;
 	}
 
 }

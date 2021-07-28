@@ -48,7 +48,9 @@ class ReportConfiguredQuery extends ElementQuery
 			"labreports_configured_reports.reportTitle",
 			"labreports_configured_reports.reportDescription",
 			"labreports_configured_reports.template",
-			"labreports_configured_reports.formatFunction",	
+			"labreports_configured_reports.formatFunction",
+			"labreports_configured_reports.dateCreated",
+			"labreports_configured_reports.dateUpdated"
 		];
 		$this->query->select($selectsArray);
 

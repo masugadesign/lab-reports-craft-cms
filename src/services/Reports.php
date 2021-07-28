@@ -32,16 +32,40 @@ class Reports extends Service
 	 */
 	public function storagePath()
 	{
-		return $this->plugin->getSettings()->fileStorageFolder;
+		$folderPath = $this->plugin->getSettings()->fileStorageFolder;
+		if ( ! file_exists($folderPath) ) {
+			$made = mkdir($folderPath, 0777, true);
+			if ( ! $made ) {
+				$this->log("Error creating Lab Reports folder at `{$folderPath}`.");
+				die("Error creating Lab Reports report folder. See labreports.log for details.");
+			}
+		}
+		return $folderPath;
 	}
 
 	/**
 	 * This method executes a particular configured report.
 	 * @param ReportConfigured $rc
 	 */
-	public function run(ReportConfigured $rc)
+	public function run(ReportConfigured $rc, $queueJob=null)
 	{
-		$rc->run();
+		$report = new Report($rc);
+		$view = Craft::$app->getView();
+		/*
+		Craft throws craft\errors\UnsupportedSiteException when siteId is null.
+		No idea why it is null or has to be set manually as that isn't the norm.
+		*/
+		$report->siteId = Craft::$app->getSites()->currentSite->id;
+		$saved = Craft::$app->getElements()->saveElement($report);
+		$report->setQueueJob($queueJob);
+		$report->updateStatus('in_progress');
+		// When run in the queue, Craft has *not* set the site templates path.
+		$view->setTemplatesPath(Craft::$app->getPath()->getSiteTemplatesPath());
+		$parsedReportTemplate = $view->renderTemplate($rc->template, [
+			'report' => $report
+		]);
+		$report->updateStatus('finished');
+		return $report->fileExists() ? $report : null;
 	}
 
 	/**
@@ -121,6 +145,17 @@ class Reports extends Service
 	}
 
 	/**
+	 * This method fetches a single ReportConfigured element by ID or returns `null`
+	 * if it does not exist.
+	 * @param int $id
+	 * @return ReportConfigured|null
+	 */
+	public function getReportConfiguredById($id): ?ReportConfigured
+	{
+		return ReportConfigured::find()->id($id)->one();
+	}
+
+	/**
 	 * This method returns a ReportConfiguredQuery with the supplied criteria
 	 * applied to the query.
 	 * @param array $criteria
@@ -168,18 +203,6 @@ class Reports extends Service
 	public function formatFunctions(): array
 	{
 		return $this->plugin->getConfigItem('functions');
-	}
-
-	/**
-	 * This method writes a report row to a designated filename. The system path
-	 * is determined by the plugin config.
-	 * @param string $filename
-	 * @param array $row
-	 */
-	public function writeRow($filename, $row)
-	{
-		$filePath = $this->storagePath().DIRECTORY_SEPARATOR.$filename;
-
 	}
 
 }

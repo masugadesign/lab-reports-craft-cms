@@ -3,6 +3,8 @@
 namespace Masuga\LabReports\elements;
 
 use Craft;
+use DateTime;
+use DateTimeZone;
 use Exception;
 use craft\base\Element;
 use craft\elements\User;
@@ -13,6 +15,8 @@ use craft\helpers\StringHelper;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\ReportConfigured;
 use Masuga\LabReports\elements\db\ReportQuery;
+use Masuga\LabReports\exceptions\InvalidReportConfiguredException;
+use Masuga\LabReports\queue\jobs\GenerateReport;
 
 class Report extends Element
 {
@@ -21,7 +25,22 @@ class Report extends Element
 	public $filename = null;
 	public $totalRows = 0;
 	public $dateGenerated = null;
+	public $reportStatus = null;
 	public $userId = null;
+
+	public const BATCH_LIMIT = 25;
+
+	/**
+	 * A way to reference the queue job that spawned this report.
+	 * @var GenerateReport
+	 */
+	private $_queueJob = null;
+
+	/**
+	 * A place to store the related ReportConfigured element.
+	 * @var ReportConfigured
+	 */
+	private $_reportConfigured = null;
 
 	/**
 	 * The element query used to generate *advanced* reports.
@@ -29,24 +48,26 @@ class Report extends Element
 	 */
 	private $query = null;
 
+	/**
+	 * A Craft User element that represents who triggered this report.
+	 * @var User
+	 */
 	private $_user = null;
 
-	public function __construct($reportConfiguredId=null)
-	{
-		$this->reportConfiguredId = $reportConfiguredId;
-	}
-
 	/**
-	 * The instance of the Lab Reports plugin.
+	 * Instance of the LabReports plugin.
 	 * @var LabReports
 	 */
 	private $plugin = null;
 
-	public function init()
+	public function __construct($reportConfigured=null)
 	{
-		parent::init();
-		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
-		$this->filename = $this->generateFilename();
+		$this->plugin = LabReports::getInstance();
+		if ( $reportConfigured instanceof ReportConfigured ) {
+			$this->setReportConfigured($reportConfigured);
+		} elseif ( $reportConfigured ) {
+			throw new InvalidReportConfiguredException("Report::reportConfigured must be an instance of ReportConfigured.");
+		}
 	}
 
 	/**
@@ -68,7 +89,7 @@ class Report extends Element
 	{
 		$localDate = $this->currentLocalDate()->format('YmdHis');
 		$reportConfigured = $this->getReportConfigured();
-		$title = StringHelper::slugify($reportConfigured->reportTitle);
+		$title = $reportConfigured ? StringHelper::slugify($reportConfigured->reportTitle) : '';
 		$filename = "{$title}-{$localDate}.{$ext}";
 		return $filename;
 	}
@@ -80,8 +101,61 @@ class Report extends Element
 	public function currentLocalDate(): DateTime
 	{
 		$date = DateTimeHelper::currentUTCDateTime();
-		$date->setTimeZone( Craft::$app->getTimeZone() );
+		$date->setTimeZone( new DateTimeZone(Craft::$app->getTimeZone()) );
 		return $date;
+	}
+
+	/**
+	 * This methods builds the report file based on an array of column headers
+	 * and an element query.
+	 * @param array $headers
+	 * @param ElementQuery $query
+	 * @return int
+	 */
+	public function build($headers, ElementQuery $query): int
+	{
+		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
+		$rowsWritten = 0;
+		$this->addColumnHeaders($headers);
+		$currentTotalRows = $offset = 0;
+		$grandTotalRows = $query->count();
+		$formatFunction = $this->plugin->reports->formatFunction($this->_reportConfigured->formatFunction);
+		do {
+			if ( $this->_queueJob ) {
+				$this->_queueJob->updateProgress(($currentTotalRows / $grandTotalRows), "{$currentTotalRows} of {$grandTotalRows} rows");
+			}
+			$elements = $query->limit(self::BATCH_LIMIT)->offset($offset)->all();
+			$batchCount = count($elements);
+			foreach($elements as &$element) {
+				$row = $formatFunction($element);
+				$written = $this->addRow($row);
+				// The count of successfully written rows.
+				$rowsWritten += $written ? 1 : 0;
+				// The count of every row from every loop regardless of success.
+				$currentTotalRows ++;
+			}
+			$offset += self::BATCH_LIMIT;
+		} while ( $batchCount === self::BATCH_LIMIT );
+		return $rowsWritten;
+	}
+
+	/**
+	 * This method writes a report row to a designated filename. The system path
+	 * is determined by the plugin config.
+	 * @param string $filename
+	 * @param array $row
+	 * @return bool
+	 */
+	private function writeRow($filename, $row): bool
+	{
+		$filePath = $this->plugin->reports->storagePath().DIRECTORY_SEPARATOR.$filename;
+		$lengthWritten = 0;
+		$fp = fopen($filePath, 'a+');
+		if ( $fp !== false ) {
+			$lengthWritten = fputcsv($fp, $row, ',');
+		}
+		fclose($fp);
+		return $lengthWritten > 0;
 	}
 
 	/**
@@ -91,20 +165,9 @@ class Report extends Element
 	 * @param array $columnNames
 	 * @return bool
 	 */
-	public function writeColumnHeaders(array $columnNames): bool
+	public function addColumnHeaders(array $columnNames): bool
 	{
-		return $this->plugin->reports->writeRow($columnNames);
-	}
-
-	/**
-	 * This method executes the report by adding the column headers to the first
-	 * row of the file then by spawning a queue job that iterates over the query
-	 * results and appends them to the report file.
-	 */
-	public function execute(array $columnHeaders, ElementQuery $query)
-	{
-		$this->updateStatus('in_progress');
-		$headersAdded = $this->writeColumnHeaders($columnNames);
+		return $this->addRow($columnNames);
 	}
 
 	/**
@@ -132,7 +195,7 @@ class Report extends Element
 	 */
 	public function addRow($row): bool
 	{
-		$success = $this->plugin->reports->writeRow($this->filename, $row);
+		$success = $this->writeRow($this->filename, $row);
 		$this->totalRows += $success ? 1 : 0;
 		return $success;
 	}
@@ -189,9 +252,15 @@ class Report extends Element
 	 * @param ReportConfigured $rc
 	 * @return $this
 	 */
-	public function setReportConfigured($rc)
+	public function setReportConfigured(ReportConfigured $rc)
 	{
-		$this->_reportConfigured = $rc;
+		if ( ! $rc instanceof ReportConfigured ) {
+			throw new InvalidReportConfiguredException("Report::reportConfigured must be an instance of ReportConfigured.");
+		}
+		$this->_reportConfigured = $rc; // private
+		$this->reportConfiguredId = $rc->id; // public
+		// A change to the ReportConfigured results in a change to the filename.
+		$this->filename = $this->generateFilename();
 		return $this;
 	}
 
@@ -208,6 +277,65 @@ class Report extends Element
 			$rc = ReportConfigured::find()->id($this->reportConfiguredId)->one();
 		}
 		return $rc;
+	}
+
+	/**
+	 * Returns the attributes that can be shown/sorted by in table views.
+	 * @param string|null $source
+	 * @return array
+	 */
+	public static function defineTableAttributes($source = null): array
+	{
+		return [
+			'id' => Craft::t('labreports', 'ID'),
+			'filename' => Craft::t('labreports', 'Filename'),
+			'reportConfigured' => Craft::t('labreports', 'Configured Report'),
+			'totalRows' => Craft::t('labreports', 'Generated Reports')
+		];
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	protected static function defineDefaultTableAttributes(string $source): array
+	{
+		return ['id', 'filename', 'reportConfigured', 'totalRows'];
+	}
+
+	/**
+ 	* @inheritdoc
+ 	*/
+	protected static function defineSortOptions(): array
+	{
+		return [
+			'dateGenerated' => Craft::t('app', 'Date Generated'),
+			'filename' => Craft::t('labreports', 'Filename'),
+		];
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	protected function tableAttributeHtml(string $attribute): string
+	{
+		$displayValue = '';
+		switch ($attribute) {
+			case 'id':
+				$displayValue = $this->$attribute;
+				break;
+			case 'reportConfigured':
+				$rc = $this->getReportConfigured();
+				if ( $rc ) {
+					$displayValue = "<a href='".$rc->getCpEditUrl()."' >{$rc->reportTitle}</a>";
+				} else {
+					$displayValue = 'Unknown';
+				}
+				break;
+			default:
+				$displayValue = parent::tableAttributeHtml($attribute);
+				break;
+		}
+		return (string) $displayValue;
 	}
 
 	/**
@@ -257,8 +385,19 @@ class Report extends Element
 	}
 
 	/**
-	 * This method 
-	 *
+	 * This method assigns a GenerateReport queue job to this report instance.
+	 * @param GenerateReport $job
+	 * @return self
+	 */
+	public function setQueueJob(GenerateReport $job)
+	{
+		$this->_queueJob = $job;
+		return $this;
+	}
+
+	/**
+	 * This method updates the status of a report.
+	 * @param string $status
 	 */
 	public function updateStatus($status): bool
 	{

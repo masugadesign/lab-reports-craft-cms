@@ -17,10 +17,19 @@ class GenerateReport extends BaseJob
 	protected $queue = null;
 
 	/**
-	 * The *generated* Report element.
-	 * @var Report
+	 * The ReportConfigured element ID used to generate a report.
+	 * @var int
 	 */
-	protected $report = null;
+	public $reportConfiguredId = null;
+
+	private $_reportTitle = null;
+
+	public function init()
+	{
+		$plugin = LabReports::getInstance();
+		$rc = $plugin->reports->getReportConfiguredById($this->reportConfiguredId);
+		$this->_reportTitle = $rc->reportTitle;
+	}
 
 	/**
 	 * @inheritdoc
@@ -29,17 +38,19 @@ class GenerateReport extends BaseJob
 	{
 		$this->queue =& $queue;
 		$plugin = LabReports::getInstance();
-
+		$rc = $plugin->reports->getReportConfiguredById($this->reportConfiguredId);
+		$plugin->reports->run($rc, $this);
 	}
 
 	/**
 	 * A public version of the setProgress method so we can update the job progress
 	 * from another class.
 	 * @param float $progress
+	 * @param string $message
 	 */
-	public function updateProgress($progress)
+	public function updateProgress($progress, $message=null)
 	{
-		$this->setProgress($this->queue, $progress);
+		$this->setProgress($this->queue, $progress, $message);
 	}
 
 	/**
@@ -48,7 +59,7 @@ class GenerateReport extends BaseJob
 	 */
 	protected function defaultDescription(): string
 	{
-		return "Generating {$report->filename} report.";
+		return "Generating '{$this->_reportTitle}' report.";
 	}
 
 }

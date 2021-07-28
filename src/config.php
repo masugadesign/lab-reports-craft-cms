@@ -7,7 +7,7 @@ return [
 	/**
 	 * System path to a folder where generated report files will be stored.
 	 */
-	'fileStorageFolder' => Craft::$app->getPath()->getStoragePath().DIRECTORY_SEPARATOR.'labreports',
+	'fileStorageFolder' => '',
 
 	/**
 	 * These functions are used to generate advanced reports that require more

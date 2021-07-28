@@ -25,7 +25,7 @@ class ReportQuery extends ElementQuery
 	/**
  	* @inheritdoc
  	*/
-	protected $defaultOrderBy = ['labreports_configured_reports.dateCreated' => SORT_DESC];
+	protected $defaultOrderBy = ['labreports_reports.dateGenerated' => SORT_DESC];
 
 	public function init()
 	{
@@ -41,7 +41,14 @@ class ReportQuery extends ElementQuery
 		$this->joinElementTable('labreports_reports');
 
 		$selectsArray = [
-			'labreports_reports.dateGenerated'
+			'labreports_reports.dateCreated',
+			'labreports_reports.dateUpdated',
+			'labreports_reports.dateGenerated',
+			'labreports_reports.reportConfiguredId',
+			'labreports_reports.reportStatus',
+			'labreports_reports.filename',
+			'labreports_reports.totalRows',
+			'labreports_reports.userId',
 		];
 		$this->query->select($selectsArray);
 

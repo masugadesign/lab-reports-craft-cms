@@ -28,6 +28,7 @@ class Install extends Migration
 			$this->createTable('{{%labreports_reports}}', [
 				'id' => $this->primaryKey(),
 				'reportConfiguredId' => $this->integer(),
+				'reportStatus' => $this->string(25);
 				'filename' => $this->string(255),
 				'totalRows' => $this->integer(),
 				'userId' => $this->integer(),

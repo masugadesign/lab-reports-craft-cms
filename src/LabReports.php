@@ -106,6 +106,7 @@ class LabReports extends Plugin
 			$event->rules['labreports'] = 'labreports/cp/index';
 			$event->rules['labreports/configure'] = 'labreports/cp/configure';
 			$event->rules['labreports/run'] = 'labreports/cp/run';
+			$event->rules['labreports/generated-reports'] = 'labreports/cp/generated-reports';
 		});
 	}
 
