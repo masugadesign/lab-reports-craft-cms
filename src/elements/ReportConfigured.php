@@ -259,7 +259,7 @@ class ReportConfigured extends Element
 			$total = $this->_totalRan;
 		} else {
 			if ( $this->id ) {
-				$total = Report::find()->configuredReportId($this->id)->count();
+				$total = Report::find()->reportConfiguredId($this->id)->count();
 				$this->_totalRan = $total;
 			}
 		}

@@ -49,13 +49,15 @@ class Reports extends Service
 	 */
 	public function run(ReportConfigured $rc, $queueJob=null)
 	{
-		$report = new Report($rc);
+		$report = (new Report())->setReportConfigured($rc);
 		$view = Craft::$app->getView();
 		/*
 		Craft throws craft\errors\UnsupportedSiteException when siteId is null.
 		No idea why it is null or has to be set manually as that isn't the norm.
 		*/
 		$report->siteId = Craft::$app->getSites()->currentSite->id;
+		$user = Craft::$app->getUser()->getIdentity();
+		$report->userId = $user ? $user->id : null;
 		$saved = Craft::$app->getElements()->saveElement($report);
 		$report->setQueueJob($queueJob);
 		$report->updateStatus('in_progress');
@@ -203,6 +205,21 @@ class Reports extends Service
 	public function formatFunctions(): array
 	{
 		return $this->plugin->getConfigItem('functions');
+	}
+
+	/**
+	 * This method deletes a Report element and its associated file. It returns
+	 * a boolean `true` on success, `false` on failure.
+	 * @param Report $report
+	 * @return bool
+	 */
+	public function deleteReport(Report $report): bool
+	{
+		if ( $report->fileExists() ) {
+			unlink( $report->filePath() );
+		}
+		$deleted = Craft::$app->getElements()->deleteElement($report);
+		return $deleted;
 	}
 
 }

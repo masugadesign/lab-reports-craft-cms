@@ -49,7 +49,6 @@ class CpController extends Controller
 	/**
 	 * This method presents the user with a form to create/update a ReportConfigured
 	 * element.
-	 * @param ReportConfigured $report
 	 * @return Response
 	 */
 	public function actionConfigure(ReportConfigured $report=null): Response
@@ -134,9 +133,15 @@ class CpController extends Controller
 	{
 		$id = Craft::$app->getRequest()->getParam('id');
 		$report = Report::find()->id($id)->one();
+		// Check that the Report element actually exists.
 		if ( ! $report ) {
 			throw new NotFoundHttpException("Invalid Generated Report ID: `{$id}`");
 		}
+		// Make sure the file exists.
+		if ( ! $report->fileExists() ) {
+			throw new NotFoundHttpException("Report file `{$report->filePath()}` not found.");
+		}
+		return Craft::$app->getResponse()->sendFile($report->filePath());
 	}
 
 }

@@ -14,7 +14,7 @@ class ReportRecord extends ActiveRecord
 	 */
 	public static function tableName(): string
 	{
-		return '{{%labreports_configured_reports}}';
+		return '{{%labreports_reports}}';
 	}
 
 	/**
@@ -30,9 +30,9 @@ class ReportRecord extends ActiveRecord
 	 * Returns all the reports ran for this configured report.
 	 * @return ActiveQueryInterface The relational query object.
 	 */
-	public function getConfiguredReports(): ActiveQueryInterface
+	public function getConfiguredReport(): ActiveQueryInterface
 	{
-		return $this->hasOne(ConfiguredReport::class, ['id' => 'reportId']);
+		return $this->hasOne(ConfiguredReport::class, ['id' => 'reportConfiguredId']);
 	}
 
 	/**

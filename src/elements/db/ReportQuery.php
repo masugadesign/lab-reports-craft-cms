@@ -12,7 +12,7 @@ class ReportQuery extends ElementQuery
 {
 
 	public $dateGenerated = null;
-	public $configuredReportId = null;
+	public $reportConfiguredId = null;
 	public $after = null;
 	public $before = null;
 
@@ -61,8 +61,8 @@ class ReportQuery extends ElementQuery
 		if ($this->dateGenerated) {
 			$this->subQuery->andWhere(Db::parseDateParam('labreports_reports.dateGenerated', $this->dateGenerated));
 		}
-		if ($this->configuredReportId) {
-			$this->subQuery->andWhere(Db::parseParam('labreports_reports.reportConfiguredId', $this->configuredReportId));
+		if ($this->reportConfiguredId) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.reportConfiguredId', $this->reportConfiguredId));
 		}
 		return parent::beforePrepare();
 	}
@@ -72,9 +72,9 @@ class ReportQuery extends ElementQuery
 	 * @param mixed $value
 	 * @return static self
 	 */
-	public function configuredReportId($value): ReportQuery
+	public function reportConfiguredId($value): ReportQuery
 	{
-		$this->configuredReportId = $value;
+		$this->reportConfiguredId = $value;
 		return $this;
 	}
 

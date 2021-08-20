@@ -12,11 +12,14 @@ use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
+use craft\helpers\UrlHelper;
 use Masuga\LabReports\LabReports;
+use Masuga\LabReports\elements\actions\DeleteReport;
 use Masuga\LabReports\elements\ReportConfigured;
 use Masuga\LabReports\elements\db\ReportQuery;
 use Masuga\LabReports\exceptions\InvalidReportConfiguredException;
 use Masuga\LabReports\queue\jobs\GenerateReport;
+use Masuga\LabReports\records\ReportRecord;
 
 class Report extends Element
 {
@@ -60,13 +63,229 @@ class Report extends Element
 	 */
 	private $plugin = null;
 
-	public function __construct($reportConfigured=null)
+	public function init()
 	{
+		parent::init();
 		$this->plugin = LabReports::getInstance();
-		if ( $reportConfigured instanceof ReportConfigured ) {
-			$this->setReportConfigured($reportConfigured);
-		} elseif ( $reportConfigured ) {
-			throw new InvalidReportConfiguredException("Report::reportConfigured must be an instance of ReportConfigured.");
+	}
+
+	/**
+	 * Returns the element type name.
+	 * @return string
+	 */
+	public static function displayName(): string
+	{
+		return Craft::t('labreports', 'Generated Report');
+	}
+
+	/**
+	 * Returns whether this element type has content.
+	 * @return bool
+	 */
+	public static function hasContent(): bool
+	{
+		return false;
+	}
+
+	/**
+	 * Returns whether this element type has titles. Though reports have "titles",
+	 * we are not using Craft's `content` table with these elements thus we are
+	 * using our own `reportTitle` column.
+	 * @return bool
+	 */
+	public static function hasTitles(): bool
+	{
+		return false;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function isLocalized(): bool
+	{
+		return true;
+	}
+
+	/**
+	 * @inheritDoc IElementType::getAvailableActions()
+	 * @param string|null $source
+	 * @return array|null
+	 */
+	protected static function defineActions(string $source = null): array
+	{
+		return [
+			DeleteReport::class
+		];
+	}
+
+	/**
+	 * Returns this element type's sources.
+	 * @param string|null $context
+	 * @return array|false
+	 */
+	protected static function defineSources(string $context = null): array
+	{
+		$sources = [
+			[
+				'key' => 'allReports',
+				'label' => Craft::t('labreports', 'All Reports'),
+				'defaultSort' => ['labreports_reports.dateGenerated', 'desc']
+			]
+		];
+		// Fetch all ReportConfigured elements and add a source for each one.
+		$rcs = ReportConfigured::find()->orderBy('reportTitle')->all();
+		foreach($rcs as &$rc) {
+			$sources[] = [
+				'key' => str_replace(' ', '', $rc->reportTitle),
+				'label' => $rc->reportTitle,
+				'criteria' => ['reportConfiguredId' => $rc->id],
+				'defaultSort' => ['labreports_reports.dateGenerated', 'desc']
+			];
+		}
+		//exit("<pre>".print_r($sources,true)."</pre>");
+		return $sources;
+	}
+
+	/**
+	 * Returns the attributes that can be shown/sorted by in table views.
+	 * @param string|null $source
+	 * @return array
+	 */
+	public static function defineTableAttributes($source = null): array
+	{
+		return [
+			'id' => Craft::t('labreports', 'ID'),
+			'filename' => Craft::t('labreports', 'Filename'),
+			'reportConfigured' => Craft::t('labreports', 'Configured Report'),
+			'dateGenerated' => Craft::t('labreports', 'Date Generated'),
+			'totalRows' => Craft::t('labreports', 'Total Rows')
+		];
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	protected static function defineDefaultTableAttributes(string $source): array
+	{
+		return ['id', 'filename', 'reportConfigured', 'dateGenerated', 'totalRows'];
+	}
+
+	/**
+ 	* @inheritdoc
+ 	*/
+	protected static function defineSortOptions(): array
+	{
+		return [
+			'dateGenerated' => Craft::t('app', 'Date Generated'),
+			'filename' => Craft::t('labreports', 'Filename'),
+		];
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	protected function tableAttributeHtml(string $attribute): string
+	{
+		$displayValue = '';
+		switch ($attribute) {
+			case 'id':
+				$displayValue = (string) $this->id;
+				break;
+			case 'reportConfigured':
+				$rc = $this->getReportConfigured();
+				if ( $rc ) {
+					$displayValue = "<a href='".$rc->getCpEditUrl()."' >{$rc->reportTitle}</a>";
+				} else {
+					$displayValue = (string) 'Unknown';
+				}
+				break;
+			case 'dateGenerated':
+				$timezone = new DateTimeZone(Craft::$app->getTimeZone());
+				$date = $this->dateGenerated ? (new DateTime($this->dateGenerated))->setTimezone($timezone) : null;
+				$displayValue = $date ? $date->format('F j, Y g:i a') : '--';
+				break;
+			case 'totalRows':
+				$displayValue = (string) number_format($this->totalRows, 0);
+				break;
+			case 'filename':
+				$url = $this->getDownloadUrl();
+				$displayValue = "<a href='{$url}' ><span data-icon='download' aria-hidden='true'></span> {$this->filename}</a>";
+				break;
+			default:
+				$displayValue = parent::tableAttributeHtml($attribute);
+				break;
+		}
+		return (string) $displayValue;
+	}
+
+	/**
+ 	* @inheritdoc
+ 	* @throws Exception if existing record is not found.
+ 	*/
+	public function afterSave(bool $isNew)
+	{
+		if ( $isNew ) {
+			$record = new ReportRecord;
+			$record->id = $this->id;
+		} else {
+			$record = ReportRecord::findOne($this->id);
+			if (!$record) {
+				throw new Exception('Invalid generated report ID: '.$this->id);
+			}
+		}
+		$record->reportConfiguredId = $this->reportConfiguredId;
+		$record->reportStatus = $this->reportStatus;
+		$record->dateGenerated = $this->dateGenerated;
+		$record->filename = $this->filename;
+		$record->totalRows = $this->totalRows;
+		$record->userId = $this->userId;
+		$status = $record->save();
+		parent::afterSave($isNew);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function eagerLoadingMap(array $sourceElements, string $handle)
+	{
+		$sourceElementIds = ArrayHelper::getColumn($sourceElements, 'id');
+		if ($handle === 'user') {
+			$map = (new Query())
+				->select(['id as source', 'userId as target'])
+				->from(['{{%labreports_reports}}'])
+				->where(['and', ['id' => $sourceElementIds], ['not', ['userId' => null]]])
+				->all();
+			return [
+				'elementType' => User::class,
+				'map' => $map
+			];
+		} elseif ($handle === 'configuredReport') {
+			$map = (new Query())
+				->select(['id as source', 'reportConfiguredId as target'])
+				->from(['{{%labreports_reports}}'])
+				->where(['and', ['id' => $sourceElementIds], ['not', ['reportConfiguredId' => null]]])
+				->all();
+			return [
+				'elementType' => ReportConfigured::class,
+				'map' => $map
+			];
+		}
+		return parent::eagerLoadingMap($sourceElements, $handle);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function setEagerLoadedElements(string $handle, array $elements)
+	{
+		if ($handle === 'user') {
+			$user = $elements[0] ?? null;
+			$this->setUser($user);
+		} elseif ($handle === 'configuredReport') {
+			$rc = $elements[0] ?? null;
+			$this->setReportConfigured($rc);
+		} else {
+			parent::setEagerLoadedElements($handle, $elements);
 		}
 	}
 
@@ -254,8 +473,9 @@ class Report extends Element
 	 */
 	public function setReportConfigured(ReportConfigured $rc)
 	{
-		if ( ! $rc instanceof ReportConfigured ) {
-			throw new InvalidReportConfiguredException("Report::reportConfigured must be an instance of ReportConfigured.");
+		if ( $rc !== null && ! $rc instanceof ReportConfigured ) {
+			$varType = gettype($rc);
+			throw new InvalidReportConfiguredException("Report::reportConfigured must be an instance of ReportConfigured. `{$varType}` given.");
 		}
 		$this->_reportConfigured = $rc; // private
 		$this->reportConfiguredId = $rc->id; // public
@@ -275,113 +495,9 @@ class Report extends Element
 			$rc = $this->_reportConfigured;
 		} elseif ( $this->_reportConfigured ) {
 			$rc = ReportConfigured::find()->id($this->reportConfiguredId)->one();
+			$this->_reportConfigured = $rc;
 		}
 		return $rc;
-	}
-
-	/**
-	 * Returns the attributes that can be shown/sorted by in table views.
-	 * @param string|null $source
-	 * @return array
-	 */
-	public static function defineTableAttributes($source = null): array
-	{
-		return [
-			'id' => Craft::t('labreports', 'ID'),
-			'filename' => Craft::t('labreports', 'Filename'),
-			'reportConfigured' => Craft::t('labreports', 'Configured Report'),
-			'totalRows' => Craft::t('labreports', 'Generated Reports')
-		];
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	protected static function defineDefaultTableAttributes(string $source): array
-	{
-		return ['id', 'filename', 'reportConfigured', 'totalRows'];
-	}
-
-	/**
- 	* @inheritdoc
- 	*/
-	protected static function defineSortOptions(): array
-	{
-		return [
-			'dateGenerated' => Craft::t('app', 'Date Generated'),
-			'filename' => Craft::t('labreports', 'Filename'),
-		];
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	protected function tableAttributeHtml(string $attribute): string
-	{
-		$displayValue = '';
-		switch ($attribute) {
-			case 'id':
-				$displayValue = $this->$attribute;
-				break;
-			case 'reportConfigured':
-				$rc = $this->getReportConfigured();
-				if ( $rc ) {
-					$displayValue = "<a href='".$rc->getCpEditUrl()."' >{$rc->reportTitle}</a>";
-				} else {
-					$displayValue = 'Unknown';
-				}
-				break;
-			default:
-				$displayValue = parent::tableAttributeHtml($attribute);
-				break;
-		}
-		return (string) $displayValue;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function eagerLoadingMap(array $sourceElements, string $handle)
-	{
-		$sourceElementIds = ArrayHelper::getColumn($sourceElements, 'id');
-		if ($handle === 'user') {
-			$map = (new Query())
-				->select(['id as source', 'userId as target'])
-				->from(['{{%labreports_reports}}'])
-				->where(['and', ['id' => $sourceElementIds], ['not', ['userId' => null]]])
-				->all();
-			return [
-				'elementType' => User::class,
-				'map' => $map
-			];
-		} elseif ($handle === 'configuredReport') {
-			$map = (new Query())
-				->select(['id as source', 'reportConfiguredId as target'])
-				->from(['{{%labreports_reports}}'])
-				->where(['and', ['id' => $sourceElementIds], ['not', ['reportConfiguredId' => null]]])
-				->all();
-			return [
-				'elementType' => ReportConfigured::class,
-				'map' => $map
-			];
-		}
-		return parent::eagerLoadingMap($sourceElements, $handle);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function setEagerLoadedElements(string $handle, array $elements)
-	{
-		if ($handle === 'user') {
-			$user = $elements[0] ?? null;
-			$this->setUser($user);
-		} elseif ($handle === 'configuredReport') {
-			$rc = $elements[0] ?? null;
-			$this->setReportConfigured($rc);
-		} else {
-			parent::setEagerLoadedElements($handle, $elements);
-		}
 	}
 
 	/**
@@ -403,6 +519,15 @@ class Report extends Element
 	{
 		$this->reportStatus = $status;
 		return Craft::$app->getElements()->saveElement($this);
+	}
+
+	/**
+	 * This method returns the download URL
+	 * @return string
+	 */
+	public function getDownloadUrl(): string
+	{
+		return UrlHelper::cpUrl('labreports/download', ['id' => $this->id]);
 	}
 
 }
