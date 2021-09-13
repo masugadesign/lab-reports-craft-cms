@@ -132,7 +132,7 @@ class Reports extends Service
 	 */
 	public function saveReportConfigured($data, $id=null): ?ReportConfigured
 	{
-		$rc = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
+		$rc = $id ? $this->getReportConfiguredById($id) : new ReportConfigured;
 		$saved = false;
 		// Check it is populated in case someone supplied a bad ID.
 		if ( $rc ) {
@@ -142,6 +142,8 @@ class Reports extends Service
 			$rc->template = $data['template'] ?? $rc->template;
 			$rc->formatFunction = $data['formatFunction'] ?? $rc->formatFunction;
 			$saved = Craft::$app->getElements()->saveElement($rc);
+		} elseif ( $this->plugin->getConfigItem('debug')) {
+			$this->log("ReportConfigured with ID `{$id}` not found.");
 		}
 		return $rc;
 	}
@@ -217,8 +219,13 @@ class Reports extends Service
 	{
 		if ( $report->fileExists() ) {
 			unlink( $report->filePath() );
+		} else {
+			$this->log("Report file `".$report->filePath()."` does not exist and cannot be deleted.");
 		}
 		$deleted = Craft::$app->getElements()->deleteElement($report);
+		if ( ! $deleted ) {
+			$this->log("Failed to delete Report element with filename `{$report->filename}`.");
+		}
 		return $deleted;
 	}
 

@@ -157,6 +157,7 @@ class Report extends Element
 			'id' => Craft::t('labreports', 'ID'),
 			'filename' => Craft::t('labreports', 'Filename'),
 			'reportConfigured' => Craft::t('labreports', 'Configured Report'),
+			'reportStatus' => Craft::t('labreports', 'Status'),
 			'dateGenerated' => Craft::t('labreports', 'Date Generated'),
 			'totalRows' => Craft::t('labreports', 'Total Rows')
 		];
@@ -167,7 +168,7 @@ class Report extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'filename', 'reportConfigured', 'dateGenerated', 'totalRows'];
+		return ['id', 'filename', 'reportConfigured', 'reportStatus', 'dateGenerated', 'totalRows'];
 	}
 
 	/**
@@ -201,8 +202,8 @@ class Report extends Element
 				break;
 			case 'dateGenerated':
 				$timezone = new DateTimeZone(Craft::$app->getTimeZone());
-				$date = $this->dateGenerated ? (new DateTime($this->dateGenerated))->setTimezone($timezone) : null;
-				$displayValue = $date ? $date->format('F j, Y g:i a') : '--';
+				$date = $this->dateGenerated ? new DateTime($this->dateGenerated, new DateTimeZone('UTC')) : null;
+				$displayValue = $date ? $date->setTimezone($timezone)->format('F j, Y g:i a') : '--';
 				break;
 			case 'totalRows':
 				$displayValue = (string) number_format($this->totalRows, 0);
@@ -325,26 +326,91 @@ class Report extends Element
 	}
 
 	/**
+	 * This method is a public-facing method for generating the report file
+	 * whether it is a Basic report or an Advanced report.
+	 * @param mixed $param1
+	 * @param mixed $param2
+	 */
+	public function build($param1, $param2=null): int
+	{
+		$rowsWritten = 0;
+		$rc = $this->getReportConfigured();
+		if ( ! $rc ) {
+			// @TODO : Throw an exeception because the report is not configured correctly. Log it!
+		}
+		if ( $rc->reportType == 'advanced' ) {
+			$rowsWritten = $this->buildAdvancedReport($param1, $param2);
+		} else {
+			$rowsWritten = $this->buildBasicReport($param1);
+		}
+		return $rowsWritten;
+	}
+
+	/**
+	 * This methods builds the report file based on an array of report rows, including
+	 * the column headers.
+	 * @param array $headers
+	 * @param ElementQuery $query
+	 * @return int
+	 */
+	private function buildBasicReport(array $rows): int
+	{
+		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
+		$rc = $this->getReportConfigured();
+		$rowsWritten = 0;
+		$currentTotalRows = $offset = 0;
+		$grandTotalRows = count($rows);
+		if ( $this->plugin->getConfigItem('debug')) {
+			$this->plugin->reports->log("Grand Total Rows : {$grandTotalRows}");
+		}
+		foreach($rows as &$row) {
+			$written = $this->addRow($row);
+			// The count of successfully written rows.
+			$rowsWritten += $written ? 1 : 0;
+			// The count of every row from every loop regardless of success.
+			$currentTotalRows ++;
+			if ( $this->_queueJob ) {
+				$this->_queueJob->updateProgress(($currentTotalRows / $grandTotalRows), "{$currentTotalRows} of {$grandTotalRows} rows");
+			}
+		}
+		if ( $this->plugin->getConfigItem('debug') ) {
+			$this->plugin->reports->log("Total Rows : {$rowsWritten} written of {$currentTotalRows} total rows.");
+		}
+		return $rowsWritten;
+	}
+
+	/**
 	 * This methods builds the report file based on an array of column headers
 	 * and an element query.
 	 * @param array $headers
 	 * @param ElementQuery $query
 	 * @return int
 	 */
-	public function build($headers, ElementQuery $query): int
+	private function buildAdvancedReport(array $headers, ElementQuery $query): int
 	{
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
+		$rc = $this->getReportConfigured();
 		$rowsWritten = 0;
-		$this->addColumnHeaders($headers);
+		$this->addRow($headers);
 		$currentTotalRows = $offset = 0;
 		$grandTotalRows = $query->count();
-		$formatFunction = $this->plugin->reports->formatFunction($this->_reportConfigured->formatFunction);
+		if ( $this->plugin->getConfigItem('debug')) {
+			$this->plugin->reports->log("Grand Total Rows : {$grandTotalRows}");
+		}
+		$formatFunction = $this->plugin->reports->formatFunction($rc->formatFunction);
+		if ( ! $formatFunction ) {
+			$this->plugin->reports->log("Advanced Report `{$rc->reportTitle}` has Formatting Function Name `{$rc->formatFunction}`.");
+			throw new InvalidReportConfiguredException("Invalid Formatting Function Name `{$rc->formatFunction}`.");
+		}
 		do {
 			if ( $this->_queueJob ) {
 				$this->_queueJob->updateProgress(($currentTotalRows / $grandTotalRows), "{$currentTotalRows} of {$grandTotalRows} rows");
 			}
 			$elements = $query->limit(self::BATCH_LIMIT)->offset($offset)->all();
 			$batchCount = count($elements);
+			if ( $this->plugin->getConfigItem('debug')) {
+				$this->plugin->reports->log("Current batch count : {$batchCount}");
+			}
 			foreach($elements as &$element) {
 				$row = $formatFunction($element);
 				$written = $this->addRow($row);
@@ -355,6 +421,9 @@ class Report extends Element
 			}
 			$offset += self::BATCH_LIMIT;
 		} while ( $batchCount === self::BATCH_LIMIT );
+		if ( $this->plugin->getConfigItem('debug') ) {
+			$this->plugin->reports->log("Total Rows : {$rowsWritten} written of {$currentTotalRows} total rows.");
+		}
 		return $rowsWritten;
 	}
 
@@ -375,18 +444,6 @@ class Report extends Element
 		}
 		fclose($fp);
 		return $lengthWritten > 0;
-	}
-
-	/**
-	 * This method adds the row of column names to the report file. It is essentially
-	 * the same as addRow except that it does not include the column names row in
-	 * the totalRows tally.
-	 * @param array $columnNames
-	 * @return bool
-	 */
-	public function addColumnHeaders(array $columnNames): bool
-	{
-		return $this->addRow($columnNames);
 	}
 
 	/**
@@ -493,7 +550,7 @@ class Report extends Element
 		$rc = null;
 		if ( $this->_reportConfigured !== null ) {
 			$rc = $this->_reportConfigured;
-		} elseif ( $this->_reportConfigured ) {
+		} elseif ( $this->reportConfiguredId ) {
 			$rc = ReportConfigured::find()->id($this->reportConfiguredId)->one();
 			$this->_reportConfigured = $rc;
 		}

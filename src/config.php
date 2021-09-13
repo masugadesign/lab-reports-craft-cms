@@ -3,6 +3,12 @@
 return [
 
 	/**
+	 * The plugin's boolean debug toggle. Set this to `true` to enabled additional
+	 * logging by the plugin that may help investigate issues.
+	 */
+	'debug' => false,
+
+	/**
 	 * System path to a folder where generated report files will be stored.
 	 */
 	'fileStorageFolder' => '',

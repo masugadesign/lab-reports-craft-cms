@@ -100,7 +100,7 @@ class CpController extends Controller
 	{
 		$queue = Craft::$app->getQueue();
 		$request = Craft::$app->getRequest();
-		$rcId = $request->getParam('reportConfiguredId');
+		$rcId = $request->getParam('id');
 		$rc = $this->plugin->reports->getReportConfiguredById($rcId);
 		if ( ! $rc ) {
 			throw new NotFoundHttpException("Invalid ReportConfigured ID `{$rcId}`.");
