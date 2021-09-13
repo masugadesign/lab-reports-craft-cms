@@ -220,7 +220,11 @@ class ReportConfigured extends Element
 	protected function defineRules(): array
 	{
 		$rules = parent::defineRules();
-		$rules[] = [['reportType', 'reportTitle', 'template'], 'required'];
+		$requiredFields = ['reportType', 'reportTitle', 'template'];
+		if ( $this->reportType == 'advanced' ) {
+			$requiredFields[] = 'formatFunction';
+		}
+		$rules[] = [$requiredFields, 'required'];
 		return $rules;
 	}
 

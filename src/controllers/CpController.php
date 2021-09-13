@@ -10,6 +10,7 @@ use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\elements\ReportConfigured;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\queue\jobs\GenerateReport;
+use Masuga\LabReports\resources\LabReportsAsset;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
@@ -57,6 +58,7 @@ class CpController extends Controller
 		if ( ! $report ) {
 			$report = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
 		}
+		$this->view->registerAssetBundle(LabReportsAsset::class);
 		return $this->renderTemplate('labreports/reports-configured/configure', [
 			'report' => $report
 		]);
