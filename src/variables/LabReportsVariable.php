@@ -4,8 +4,8 @@ namespace Masuga\LabReports\variables;
 
 use Craft;
 use Masuga\LabReports\LabReports;
-use Masuga\LabReports\ReportConfiguredQuery;
-use Masuga\LabReports\ReportQuery;
+use Masuga\LabReports\elements\db\ReportConfiguredQuery;
+use Masuga\LabReports\elements\db\ReportQuery;
 
 class LabReportsVariable
 {
@@ -42,15 +42,20 @@ class LabReportsVariable
 	}
 
 	/**
-	 * This template variable returns an array of the available format functions
-	 * defined in the plugin config file.
+	 * This template variable returns an array of the available format function
+	 * names defined in the plugin config file.
 	 * @return array
 	 */
-	public function formatFunctions()
+	public function formatFunctionNames()
 	{
-		return $this->plugin->reports->formatFunctions();
+		return $this->plugin->reports->formatFunctionNames();
 	}
 
+	/**
+	 * This template variable returns an associative array of format function
+	 * select options, including an empty one.
+	 * @return array
+	 */
 	public function formatFunctionOptions()
 	{
 		$opts = array_keys($this->plugin->reports->formatFunctions());

@@ -101,6 +101,17 @@ class ReportConfiguredQuery extends ElementQuery
 	}
 
 	/**
+	 * This method assigns the `reportDescription` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function reportDescription($value): ReportConfiguredQuery
+	{
+		$this->reportDescription = $value;
+		return $this;
+	}
+
+	/**
 	 * This method assigns the `template` query parameter value.
 	 * @param mixed $value
 	 * @return self

@@ -201,6 +201,15 @@ class Reports extends Service
 	}
 
 	/**
+	 * This method returns the array of format function names from the plugin config.
+	 * @return array
+	 */
+	public function formatFunctionNames(): array
+	{
+		return array_keys($this->plugin->getConfigItem('functions'));
+	}
+
+	/**
 	 * This method returns the array of format functions from the plugin config.
 	 * @return array
 	 */

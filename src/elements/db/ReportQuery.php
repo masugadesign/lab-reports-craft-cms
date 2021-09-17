@@ -13,6 +13,10 @@ class ReportQuery extends ElementQuery
 
 	public $dateGenerated = null;
 	public $reportConfiguredId = null;
+	public $reportStatus = null;
+	public $filename = null;
+	public $totalRows = null;
+	public $userId = null;
 	public $after = null;
 	public $before = null;
 
@@ -64,6 +68,18 @@ class ReportQuery extends ElementQuery
 		if ($this->reportConfiguredId) {
 			$this->subQuery->andWhere(Db::parseParam('labreports_reports.reportConfiguredId', $this->reportConfiguredId));
 		}
+		if ($this->userId) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.userId', $this->userId));
+		}
+		if ($this->filename) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.filename', $this->filename));
+		}
+		if ($this->reportStatus) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.reportStatus', $this->reportStatus));
+		}
+		if ($this->totalRows) {
+			$this->subQuery->andWhere(Db::parseParam('labreports_reports.totalRows', $this->totalRows));
+		}
 		return parent::beforePrepare();
 	}
 
@@ -75,6 +91,61 @@ class ReportQuery extends ElementQuery
 	public function reportConfiguredId($value): ReportQuery
 	{
 		$this->reportConfiguredId = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `userId` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function userId($value): ReportQuery
+	{
+		$this->userId = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `dateGenerated` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function dateGenerated($value): ReportQuery
+	{
+		$this->dateGenerated = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `reportStatus` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function reportStatus($value): ReportQuery
+	{
+		$this->reportStatus = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `filename` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function filename($value): ReportQuery
+	{
+		$this->filename = $value;
+		return $this;
+	}
+
+	/**
+	 * This method assigns the `totalRows` query parameter value.
+	 * @param mixed $value
+	 * @return self
+	 */
+	public function totalRows($value): ReportQuery
+	{
+		$this->totalRows = $value;
 		return $this;
 	}
 

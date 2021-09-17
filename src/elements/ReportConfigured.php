@@ -120,6 +120,7 @@ class ReportConfigured extends Element
 		return [
 			'id' => Craft::t('labreports', 'ID'),
 			'reportTitle' => Craft::t('labreports', 'Title'),
+			'reportType' => Craft::t('labreports', 'Type'),
 			'reportDescription' => Craft::t('labreports', 'Description'),
 			'totalRan' => Craft::t('labreports', 'Generated Reports'),
 			'runUrl' => Craft::t('labreports', 'Run Report')
@@ -131,7 +132,7 @@ class ReportConfigured extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'reportTitle', 'reportDescription', 'totalRan', 'runUrl'];
+		return ['id', 'reportTitle', 'reportType', 'reportDescription', 'totalRan', 'runUrl'];
 	}
 
 	/**
@@ -187,6 +188,9 @@ class ReportConfigured extends Element
 			case 'reportTitle':
 				$cpEditUrl = $this->getCpEditUrl();
 				$displayValue = "<a href='{$cpEditUrl}' >{$this->reportTitle}</a>";
+				break;
+			case 'reportType':
+				$displayValue = ucwords($this->$attribute);
 				break;
 			case 'totalRan':
 				$displayValue = (string) $this->getTotalRan();
