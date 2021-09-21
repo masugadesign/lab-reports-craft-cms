@@ -197,7 +197,7 @@ class ConfiguredReport extends Element
 				break;
 			case 'runUrl':
 				$url = $this->getRunUrl();
-				$displayValue = "<a href='{$url}' >Run</a>";
+				$displayValue = "<a href='{$url}' class='btn' >Run</a>";
 				break;
 			default:
 				$displayValue = parent::tableAttributeHtml($attribute);
