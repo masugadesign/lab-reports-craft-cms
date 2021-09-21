@@ -212,6 +212,9 @@ class Report extends Element
 				$url = $this->getDownloadUrl();
 				$displayValue = "<a href='{$url}' ><span data-icon='download' aria-hidden='true'></span> {$this->filename}</a>";
 				break;
+			case 'reportStatus':
+				$displayValue = ucwords($this->$attribute);
+				break;
 			default:
 				$displayValue = parent::tableAttributeHtml($attribute);
 				break;
