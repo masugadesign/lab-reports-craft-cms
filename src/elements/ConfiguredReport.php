@@ -10,11 +10,11 @@ use craft\elements\db\ElementQueryInterface;
 use craft\helpers\UrlHelper;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\Report;
-use Masuga\LabReports\elements\db\ReportConfiguredQuery;
-use Masuga\LabReports\elements\actions\ReportConfiguredDelete;
-use Masuga\LabReports\records\ReportConfiguredRecord;
+use Masuga\LabReports\elements\db\ConfiguredReportQuery;
+use Masuga\LabReports\elements\actions\ConfiguredReportDelete;
+use Masuga\LabReports\records\ConfiguredReportRecord;
 
-class ReportConfigured extends Element
+class ConfiguredReport extends Element
 {
 	public $reportType = null;
 	public $reportTitle = null;
@@ -50,7 +50,7 @@ class ReportConfigured extends Element
 	 */
 	public static function find(): ElementQueryInterface
 	{
-		return new ReportConfiguredQuery(static::class);
+		return new ConfiguredReportQuery(static::class);
 	}
 
 	/**
@@ -158,7 +158,7 @@ class ReportConfigured extends Element
 
 	/**
 	 * This method returns the full CP URL that generates an instance of this
-	 * ReportConfigured.
+	 * ConfiguredReport.
 	 * @return string
 	 */
 	public function getRunUrl()
@@ -239,10 +239,10 @@ class ReportConfigured extends Element
 	public function afterSave(bool $isNew)
 	{
 		if ( $isNew ) {
-			$record = new ReportConfiguredRecord;
+			$record = new ConfiguredReportRecord;
 			$record->id = $this->id;
 		} else {
-			$record = ReportConfiguredRecord::findOne($this->id);
+			$record = ConfiguredReportRecord::findOne($this->id);
 			if (!$record) {
 				throw new Exception('Invalid configured report ID: '.$this->id);
 			}
@@ -267,7 +267,7 @@ class ReportConfigured extends Element
 			$total = $this->_totalRan;
 		} else {
 			if ( $this->id ) {
-				$total = Report::find()->reportConfiguredId($this->id)->count();
+				$total = Report::find()->configuredReportId($this->id)->count();
 				$this->_totalRan = $total;
 			}
 		}

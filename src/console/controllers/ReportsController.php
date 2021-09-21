@@ -4,7 +4,7 @@ namespace Masuga\LabReports\console\controllers;
 
 use Craft;
 //use Masuga\LabReports\elements\Report;
-//use Masuga\LabReports\elements\ReportConfigured;
+//use Masuga\LabReports\elements\ConfiguredReport;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\queue\jobs\GenerateReport;
 use yii\console\Controller;
@@ -14,7 +14,7 @@ class ReportsController extends Controller
 {
 
 	/**
-	 * The Lab Reports Configured Report (ReportConfigured element) ID.
+	 * The Lab Reports Configured Report (ConfiguredReport element) ID.
 	 * @var int
 	 */
 	public $reportId;
@@ -42,13 +42,13 @@ class ReportsController extends Controller
 			return ExitCode::UNSPECIFIED_ERROR;
 		}
 		$queue = Craft::$app->getQueue();
-		$rc = $plugin->reports->getReportConfiguredById($this->reportId);
+		$rc = $plugin->reports->getConfiguredReportById($this->reportId);
 		if ( ! $rc ) {
 			$plugin->reports->log("labreports/reports/build called with invalid `reportId` option.");
-			$this->stderr("Invalid ReportConfigured ID `{$this->reportId}`.".PHP_EOL);
+			$this->stderr("Invalid ConfiguredReport ID `{$this->reportId}`.".PHP_EOL);
 			return ExitCode::UNSPECIFIED_ERROR;
 		}
-		$job = new GenerateReport(['reportConfiguredId' => $this->reportId]);
+		$job = new GenerateReport(['configuredReportId' => $this->reportId]);
 		$queue->delay(0)->push($job);
 		return ExitCode::OK;
 	}

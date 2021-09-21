@@ -7,7 +7,7 @@ use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use craft\web\Response;
 use Masuga\LabReports\elements\Report;
-use Masuga\LabReports\elements\ReportConfigured;
+use Masuga\LabReports\elements\ConfiguredReport;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\queue\jobs\GenerateReport;
 use Masuga\LabReports\resources\LabReportsAsset;
@@ -30,7 +30,7 @@ class CpController extends Controller
 	}
 
 	/**
-	 * The "ReportConfigured" element index.
+	 * The "ConfiguredReport" element index.
 	 * @return Response
 	 */
 	public function actionIndex(): Response
@@ -48,15 +48,15 @@ class CpController extends Controller
 	}
 
 	/**
-	 * This method presents the user with a form to create/update a ReportConfigured
+	 * This method presents the user with a form to create/update a ConfiguredReport
 	 * element.
 	 * @return Response
 	 */
-	public function actionConfigure(ReportConfigured $report=null): Response
+	public function actionConfigure(ConfiguredReport $report=null): Response
 	{
 		$id = Craft::$app->getRequest()->getParam('id');
 		if ( ! $report ) {
-			$report = $id ? ReportConfigured::find()->id($id)->one() : new ReportConfigured;
+			$report = $id ? ConfiguredReport::find()->id($id)->one() : new ConfiguredReport;
 		}
 		$this->view->registerAssetBundle(LabReportsAsset::class);
 		return $this->renderTemplate('labreports/reports-configured/configure', [
@@ -79,8 +79,8 @@ class CpController extends Controller
 			'template' => $request->getParam('template'),
 			'formatFunction' => $request->getParam('formatFunction'),
 		];
-		$rcId = $request->getParam('reportConfiguredId');
-		$rc = $this->plugin->reports->saveReportConfigured($data, $rcId);
+		$rcId = $request->getParam('configuredReportId');
+		$rc = $this->plugin->reports->saveConfiguredReport($data, $rcId);
 		if ( ! $rc->getErrors() ) {
 			$this->setSuccessFlash(Craft::t('labreports', 'Report configured successfully.'));
 			$response = Craft::$app->getResponse()->redirect($rc->getCpEditUrl());
@@ -95,7 +95,7 @@ class CpController extends Controller
 	}
 
 	/**
-	 * This controller action executes a ReportConfigured as a queue job.
+	 * This controller action executes a ConfiguredReport as a queue job.
 	 * @return Response
 	 */
 	public function actionRun(): Response
@@ -103,11 +103,11 @@ class CpController extends Controller
 		$queue = Craft::$app->getQueue();
 		$request = Craft::$app->getRequest();
 		$rcId = $request->getParam('id');
-		$rc = $this->plugin->reports->getReportConfiguredById($rcId);
+		$rc = $this->plugin->reports->getConfiguredReportById($rcId);
 		if ( ! $rc ) {
-			throw new NotFoundHttpException("Invalid ReportConfigured ID `{$rcId}`.");
+			throw new NotFoundHttpException("Invalid ConfiguredReport ID `{$rcId}`.");
 		}
-		$job = new GenerateReport(['reportConfiguredId' => $rc->id]);
+		$job = new GenerateReport(['configuredReportId' => $rc->id]);
 		$queue->delay(0)->push($job);
 		return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('labreports'));
 	}

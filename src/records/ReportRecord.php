@@ -32,7 +32,7 @@ class ReportRecord extends ActiveRecord
 	 */
 	public function getConfiguredReport(): ActiveQueryInterface
 	{
-		return $this->hasOne(ConfiguredReport::class, ['id' => 'reportConfiguredId']);
+		return $this->hasOne(ConfiguredReport::class, ['id' => 'configuredReportId']);
 	}
 
 	/**

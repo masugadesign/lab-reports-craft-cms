@@ -15,16 +15,16 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\actions\DeleteReport;
-use Masuga\LabReports\elements\ReportConfigured;
+use Masuga\LabReports\elements\ConfiguredReport;
 use Masuga\LabReports\elements\db\ReportQuery;
-use Masuga\LabReports\exceptions\InvalidReportConfiguredException;
+use Masuga\LabReports\exceptions\InvalidConfiguredReportException;
 use Masuga\LabReports\queue\jobs\GenerateReport;
 use Masuga\LabReports\records\ReportRecord;
 
 class Report extends Element
 {
 
-	public $reportConfiguredId = null;
+	public $configuredReportId = null;
 	public $filename = null;
 	public $totalRows = 0;
 	public $dateGenerated = null;
@@ -40,10 +40,10 @@ class Report extends Element
 	private $_queueJob = null;
 
 	/**
-	 * A place to store the related ReportConfigured element.
-	 * @var ReportConfigured
+	 * A place to store the related ConfiguredReport element.
+	 * @var ConfiguredReport
 	 */
-	private $_reportConfigured = null;
+	private $_configuredReport = null;
 
 	/**
 	 * The element query used to generate *advanced* reports.
@@ -132,13 +132,13 @@ class Report extends Element
 				'defaultSort' => ['labreports_reports.dateGenerated', 'desc']
 			]
 		];
-		// Fetch all ReportConfigured elements and add a source for each one.
-		$rcs = ReportConfigured::find()->orderBy('reportTitle')->all();
+		// Fetch all ConfiguredReport elements and add a source for each one.
+		$rcs = ConfiguredReport::find()->orderBy('reportTitle')->all();
 		foreach($rcs as &$rc) {
 			$sources[] = [
 				'key' => str_replace(' ', '', $rc->reportTitle),
 				'label' => $rc->reportTitle,
-				'criteria' => ['reportConfiguredId' => $rc->id],
+				'criteria' => ['configuredReportId' => $rc->id],
 				'defaultSort' => ['labreports_reports.dateGenerated', 'desc']
 			];
 		}
@@ -156,7 +156,7 @@ class Report extends Element
 		return [
 			'id' => Craft::t('labreports', 'ID'),
 			'filename' => Craft::t('labreports', 'Filename'),
-			'reportConfigured' => Craft::t('labreports', 'Configured Report'),
+			'configuredReport' => Craft::t('labreports', 'Configured Report'),
 			'reportStatus' => Craft::t('labreports', 'Status'),
 			'dateGenerated' => Craft::t('labreports', 'Date Generated'),
 			'totalRows' => Craft::t('labreports', 'Total Rows')
@@ -168,7 +168,7 @@ class Report extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'filename', 'reportConfigured', 'reportStatus', 'dateGenerated', 'totalRows'];
+		return ['id', 'filename', 'configuredReport', 'reportStatus', 'dateGenerated', 'totalRows'];
 	}
 
 	/**
@@ -192,8 +192,8 @@ class Report extends Element
 			case 'id':
 				$displayValue = (string) $this->id;
 				break;
-			case 'reportConfigured':
-				$rc = $this->getReportConfigured();
+			case 'configuredReport':
+				$rc = $this->getConfiguredReport();
 				if ( $rc ) {
 					$displayValue = "<a href='".$rc->getCpEditUrl()."' >{$rc->reportTitle}</a>";
 				} else {
@@ -234,7 +234,7 @@ class Report extends Element
 				throw new Exception('Invalid generated report ID: '.$this->id);
 			}
 		}
-		$record->reportConfiguredId = $this->reportConfiguredId;
+		$record->configuredReportId = $this->configuredReportId;
 		$record->reportStatus = $this->reportStatus;
 		$record->dateGenerated = $this->dateGenerated;
 		$record->filename = $this->filename;
@@ -262,12 +262,12 @@ class Report extends Element
 			];
 		} elseif ($handle === 'configuredReport') {
 			$map = (new Query())
-				->select(['id as source', 'reportConfiguredId as target'])
+				->select(['id as source', 'configuredReportId as target'])
 				->from(['{{%labreports_reports}}'])
-				->where(['and', ['id' => $sourceElementIds], ['not', ['reportConfiguredId' => null]]])
+				->where(['and', ['id' => $sourceElementIds], ['not', ['configuredReportId' => null]]])
 				->all();
 			return [
-				'elementType' => ReportConfigured::class,
+				'elementType' => ConfiguredReport::class,
 				'map' => $map
 			];
 		}
@@ -284,7 +284,7 @@ class Report extends Element
 			$this->setUser($user);
 		} elseif ($handle === 'configuredReport') {
 			$rc = $elements[0] ?? null;
-			$this->setReportConfigured($rc);
+			$this->setConfiguredReport($rc);
 		} else {
 			parent::setEagerLoadedElements($handle, $elements);
 		}
@@ -300,7 +300,7 @@ class Report extends Element
 	}
 
 	/**
-	 * This method generates a report filename based on the related ReportConfigured
+	 * This method generates a report filename based on the related ConfiguredReport
 	 * and current LOCAL date.
 	 * @param string $ext
 	 * @return string
@@ -308,8 +308,8 @@ class Report extends Element
 	private function generateFilename($ext='csv'): string
 	{
 		$localDate = $this->currentLocalDate()->format('YmdHis');
-		$reportConfigured = $this->getReportConfigured();
-		$title = $reportConfigured ? StringHelper::slugify($reportConfigured->reportTitle) : '';
+		$configuredReport = $this->getConfiguredReport();
+		$title = $configuredReport ? StringHelper::slugify($configuredReport->reportTitle) : '';
 		$filename = "{$title}-{$localDate}.{$ext}";
 		return $filename;
 	}
@@ -334,7 +334,7 @@ class Report extends Element
 	public function build($param1, $param2=null): int
 	{
 		$rowsWritten = 0;
-		$rc = $this->getReportConfigured();
+		$rc = $this->getConfiguredReport();
 		if ( ! $rc ) {
 			// @TODO : Throw an exeception because the report is not configured correctly. Log it!
 		}
@@ -356,7 +356,7 @@ class Report extends Element
 	private function buildBasicReport(array $rows): int
 	{
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
-		$rc = $this->getReportConfigured();
+		$rc = $this->getConfiguredReport();
 		$rowsWritten = 0;
 		$currentTotalRows = $offset = 0;
 		$grandTotalRows = count($rows);
@@ -389,7 +389,7 @@ class Report extends Element
 	private function buildAdvancedReport(array $headers, ElementQuery $query): int
 	{
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
-		$rc = $this->getReportConfigured();
+		$rc = $this->getConfiguredReport();
 		$rowsWritten = 0;
 		$this->addRow($headers);
 		$currentTotalRows = $offset = 0;
@@ -400,7 +400,7 @@ class Report extends Element
 		$formatFunction = $this->plugin->reports->formatFunction($rc->formatFunction);
 		if ( ! $formatFunction ) {
 			$this->plugin->reports->log("Advanced Report `{$rc->reportTitle}` has Formatting Function Name `{$rc->formatFunction}`.");
-			throw new InvalidReportConfiguredException("Invalid Formatting Function Name `{$rc->formatFunction}`.");
+			throw new InvalidConfiguredReportException("Invalid Formatting Function Name `{$rc->formatFunction}`.");
 		}
 		do {
 			if ( $this->_queueJob ) {
@@ -524,35 +524,35 @@ class Report extends Element
 	}
 
 	/**
-	 * This method sets the related _reportConfigured property.
-	 * @param ReportConfigured $rc
+	 * This method sets the related _configuredReport property.
+	 * @param ConfiguredReport $rc
 	 * @return $this
 	 */
-	public function setReportConfigured(ReportConfigured $rc)
+	public function setConfiguredReport(ConfiguredReport $rc)
 	{
-		if ( $rc !== null && ! $rc instanceof ReportConfigured ) {
+		if ( $rc !== null && ! $rc instanceof ConfiguredReport ) {
 			$varType = gettype($rc);
-			throw new InvalidReportConfiguredException("Report::reportConfigured must be an instance of ReportConfigured. `{$varType}` given.");
+			throw new InvalidConfiguredReportException("Report::configuredReport must be an instance of ConfiguredReport. `{$varType}` given.");
 		}
-		$this->_reportConfigured = $rc; // private
-		$this->reportConfiguredId = $rc->id; // public
-		// A change to the ReportConfigured results in a change to the filename.
+		$this->_configuredReport = $rc; // private
+		$this->configuredReportId = $rc->id; // public
+		// A change to the ConfiguredReport results in a change to the filename.
 		$this->filename = $this->generateFilename();
 		return $this;
 	}
 
 	/**
-	 * This method returns the ReportConfigured element associated with this record.
-	 * @return ReportConfigured|null
+	 * This method returns the ConfiguredReport element associated with this record.
+	 * @return ConfiguredReport|null
 	 */
-	public function getReportConfigured()
+	public function getConfiguredReport()
 	{
 		$rc = null;
-		if ( $this->_reportConfigured !== null ) {
-			$rc = $this->_reportConfigured;
-		} elseif ( $this->reportConfiguredId ) {
-			$rc = ReportConfigured::find()->id($this->reportConfiguredId)->one();
-			$this->_reportConfigured = $rc;
+		if ( $this->_configuredReport !== null ) {
+			$rc = $this->_configuredReport;
+		} elseif ( $this->configuredReportId ) {
+			$rc = ConfiguredReport::find()->id($this->configuredReportId)->one();
+			$this->_configuredReport = $rc;
 		}
 		return $rc;
 	}

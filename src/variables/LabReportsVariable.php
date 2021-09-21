@@ -4,7 +4,7 @@ namespace Masuga\LabReports\variables;
 
 use Craft;
 use Masuga\LabReports\LabReports;
-use Masuga\LabReports\elements\db\ReportConfiguredQuery;
+use Masuga\LabReports\elements\db\ConfiguredReportQuery;
 use Masuga\LabReports\elements\db\ReportQuery;
 
 class LabReportsVariable
@@ -24,9 +24,9 @@ class LabReportsVariable
 	/**
 	 * This template variable returns a query for fetching configured reports.
 	 * @param array $criteria
-	 * @return ReportConfiguredQuery
+	 * @return ConfiguredReportQuery
 	 */
-	public function configuredReports($criteria=[]): ReportConfiguredQuery
+	public function configuredReports($criteria=[]): ConfiguredReportQuery
 	{
 		return $this->plugin->reports->configuredReportsQuery($criteria);
 	}

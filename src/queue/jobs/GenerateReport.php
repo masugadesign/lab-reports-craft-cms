@@ -17,17 +17,17 @@ class GenerateReport extends BaseJob
 	protected $queue = null;
 
 	/**
-	 * The ReportConfigured element ID used to generate a report.
+	 * The ConfiguredReport element ID used to generate a report.
 	 * @var int
 	 */
-	public $reportConfiguredId = null;
+	public $configuredReportId = null;
 
 	private $_reportTitle = null;
 
 	public function init()
 	{
 		$plugin = LabReports::getInstance();
-		$rc = $plugin->reports->getReportConfiguredById($this->reportConfiguredId);
+		$rc = $plugin->reports->getConfiguredReportById($this->configuredReportId);
 		$this->_reportTitle = $rc->reportTitle;
 	}
 
@@ -38,7 +38,7 @@ class GenerateReport extends BaseJob
 	{
 		$this->queue =& $queue;
 		$plugin = LabReports::getInstance();
-		$rc = $plugin->reports->getReportConfiguredById($this->reportConfiguredId);
+		$rc = $plugin->reports->getConfiguredReportById($this->configuredReportId);
 		$plugin->reports->run($rc, $this);
 	}
 

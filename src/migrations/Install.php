@@ -27,7 +27,7 @@ class Install extends Migration
 		if (!$this->db->tableExists('{{%labreports_reports}}')) {
 			$this->createTable('{{%labreports_reports}}', [
 				'id' => $this->primaryKey(),
-				'reportConfiguredId' => $this->integer(),
+				'configuredReportId' => $this->integer(),
 				'reportStatus' => $this->string(25),
 				'filename' => $this->string(255),
 				'totalRows' => $this->integer(),
@@ -37,6 +37,8 @@ class Install extends Migration
 				'dateUpdated' => $this->dateTime()->notNull(),
 				'uid' => $this->uid()
 			]);
+			$this->createIndex(null, '{{%labreports_reports}}', ['configuredReportId'], false);
+			$this->createIndex(null, '{{%labreports_reports}}', ['userId'], false);
 		}
 
 	}

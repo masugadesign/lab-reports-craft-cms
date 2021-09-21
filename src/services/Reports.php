@@ -8,8 +8,8 @@ use craft\helpers\ArrayHelper;
 use craft\helpers\FileHelper;
 use Masuga\LabReports\base\Service;
 use Masuga\LabReports\elements\Report;
-use Masuga\LabReports\elements\ReportConfigured;
-use Masuga\LabReports\elements\db\ReportConfiguredQuery;
+use Masuga\LabReports\elements\ConfiguredReport;
+use Masuga\LabReports\elements\db\ConfiguredReportQuery;
 use Masuga\LabReports\elements\db\ReportQuery;
 
 class Reports extends Service
@@ -45,11 +45,11 @@ class Reports extends Service
 
 	/**
 	 * This method executes a particular configured report.
-	 * @param ReportConfigured $rc
+	 * @param ConfiguredReport $rc
 	 */
-	public function run(ReportConfigured $rc, $queueJob=null)
+	public function run(ConfiguredReport $rc, $queueJob=null)
 	{
-		$report = (new Report())->setReportConfigured($rc);
+		$report = (new Report())->setConfiguredReport($rc);
 		$view = Craft::$app->getView();
 		/*
 		Craft throws craft\errors\UnsupportedSiteException when siteId is null.
@@ -128,11 +128,11 @@ class Reports extends Service
 	 * or not an existing ID was supplied.
 	 * @param array $data
 	 * @param int $id
-	 * @return ReportConfigured|null
+	 * @return ConfiguredReport|null
 	 */
-	public function saveReportConfigured($data, $id=null): ?ReportConfigured
+	public function saveConfiguredReport($data, $id=null): ?ConfiguredReport
 	{
-		$rc = $id ? $this->getReportConfiguredById($id) : new ReportConfigured;
+		$rc = $id ? $this->getConfiguredReportById($id) : new ConfiguredReport;
 		$saved = false;
 		// Check it is populated in case someone supplied a bad ID.
 		if ( $rc ) {
@@ -143,31 +143,31 @@ class Reports extends Service
 			$rc->formatFunction = $data['formatFunction'] ?? $rc->formatFunction;
 			$saved = Craft::$app->getElements()->saveElement($rc);
 		} elseif ( $this->plugin->getConfigItem('debug')) {
-			$this->log("ReportConfigured with ID `{$id}` not found.");
+			$this->log("ConfiguredReport with ID `{$id}` not found.");
 		}
 		return $rc;
 	}
 
 	/**
-	 * This method fetches a single ReportConfigured element by ID or returns `null`
+	 * This method fetches a single ConfiguredReport element by ID or returns `null`
 	 * if it does not exist.
 	 * @param int $id
-	 * @return ReportConfigured|null
+	 * @return ConfiguredReport|null
 	 */
-	public function getReportConfiguredById($id): ?ReportConfigured
+	public function getConfiguredReportById($id): ?ConfiguredReport
 	{
-		return ReportConfigured::find()->id($id)->one();
+		return ConfiguredReport::find()->id($id)->one();
 	}
 
 	/**
-	 * This method returns a ReportConfiguredQuery with the supplied criteria
+	 * This method returns a ConfiguredReportQuery with the supplied criteria
 	 * applied to the query.
 	 * @param array $criteria
-	 * @return ReportConfiguredQuery
+	 * @return ConfiguredReportQuery
 	 */
-	public function configuredReportsQuery($criteria): ReportConfiguredQuery
+	public function configuredReportsQuery($criteria): ConfiguredReportQuery
 	{
-		$query = ReportConfigured::find();
+		$query = ConfiguredReport::find();
 		if ($criteria) {
 			Craft::configure($query, $criteria);
 		}

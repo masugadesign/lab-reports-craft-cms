@@ -6,14 +6,19 @@
 	configuredReports: { label: "Configured Reports"|t, url: url('labreports') }
 } %}
 
-{% set formatFunctions = {'' : 'Select Function...'}|merge(craft.labreports.formatFunctions) %}
+{% set formatFunctions = {'' : 'Select Function...'}|merge(craft.labreports.formatFunctionNames) %}
 
 {% block content %}
+
+{% if report.id %}
+	<a href="{{ report.getRunUrl }}" class="btn" >Run</a>
+	<hr>
+{% endif %}
 
 <form action="" method="post" >
 	{{ csrfInput() }}
 	{{ actionInput('labreports/cp/configure-submit') }}
-	{{ hiddenInput('reportConfiguredId', (report.id ?? '')) }}
+	{{ hiddenInput('configuredReportId', (report.id ?? '')) }}
 
 	{{ forms.selectField({
 		label: "Type",

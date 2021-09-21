@@ -7,7 +7,7 @@ use craft\base\Element;
 use yii\db\ActiveQueryInterface;
 use Masuga\LabReports\elements\Report;
 
-class ReportConfiguredRecord extends ActiveRecord
+class ConfiguredReportRecord extends ActiveRecord
 {
 	/**
 	 * @inheritdoc
@@ -32,7 +32,7 @@ class ReportConfiguredRecord extends ActiveRecord
 	 */
 	public function getGeneratedReports(): ActiveQueryInterface
 	{
-		return $this->hasMany(Report::class, ['reportConfiguredId' => 'id']);
+		return $this->hasMany(Report::class, ['configuredReportId' => 'id']);
 	}
 
 }

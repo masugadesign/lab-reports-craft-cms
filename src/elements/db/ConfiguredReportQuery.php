@@ -6,9 +6,9 @@ use craft\db\Query;
 use craft\elements\db\ElementQuery;
 use craft\helpers\Db;
 use Masuga\LabReports\LabReports;
-use Masuga\LabReports\elements\ReportConfigured;
+use Masuga\LabReports\elements\ConfiguredReport;
 
-class ReportConfiguredQuery extends ElementQuery
+class ConfiguredReportQuery extends ElementQuery
 {
 
 	public $reportType = null;
@@ -83,7 +83,7 @@ class ReportConfiguredQuery extends ElementQuery
 	 * @param mixed $value
 	 * @return self
 	 */
-	public function reportType($value): ReportConfiguredQuery
+	public function reportType($value): ConfiguredReportQuery
 	{
 		$this->reportType = $value;
 		return $this;
@@ -94,7 +94,7 @@ class ReportConfiguredQuery extends ElementQuery
 	 * @param mixed $value
 	 * @return self
 	 */
-	public function reportTitle($value): ReportConfiguredQuery
+	public function reportTitle($value): ConfiguredReportQuery
 	{
 		$this->reportTitle = $value;
 		return $this;
@@ -105,7 +105,7 @@ class ReportConfiguredQuery extends ElementQuery
 	 * @param mixed $value
 	 * @return self
 	 */
-	public function reportDescription($value): ReportConfiguredQuery
+	public function reportDescription($value): ConfiguredReportQuery
 	{
 		$this->reportDescription = $value;
 		return $this;
@@ -116,7 +116,7 @@ class ReportConfiguredQuery extends ElementQuery
 	 * @param mixed $value
 	 * @return self
 	 */
-	public function template($value): ReportConfiguredQuery
+	public function template($value): ConfiguredReportQuery
 	{
 		$this->template = $value;
 		return $this;
@@ -127,7 +127,7 @@ class ReportConfiguredQuery extends ElementQuery
 	 * @param mixed $value
 	 * @return self
 	 */
-	public function formatFunction($value): ReportConfiguredQuery
+	public function formatFunction($value): ConfiguredReportQuery
 	{
 		$this->formatFunction = $value;
 		return $this;
