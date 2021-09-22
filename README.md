@@ -7,6 +7,8 @@ Custom content/data reporting for Craft CMS.
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Report Types](#report-types)
+	* [Basic Reports](#basic-reports)
+	* [Advanced Reports](#advanced-reports)
 - [Running Reports](#running-reports)
 - [Template Variables](#template-variables)
 - [Planned Features](#planned-features)
@@ -95,10 +97,6 @@ Report Template : _reports/booksBasic
 
 The `report` variable is automatically defined in the template contains a Lab Reports `Report` element instance.
 
-```
-php craft labreports/reports/build --reportId=50
-```
-
 #### Advanced Reports
 
 The advanced report is a template-based report geared towards larger data exports (>= 3000 rows) with a lot of columns and/or relationships. These reports allow for a developer to define the base element query as well as a PHP formatting function that should be applied to all the query results behind-the-scenes when constructing the report file.
@@ -161,6 +159,7 @@ As an example, we will create an advanced report that exports some entry metadat
 
 {# Construct an EntryQuery object WITHOUT .limit() or .all(). Do not execute the query here! #}
 {% set entriesQuery = craft.entries.section('books').orderBy('title') %}
+
 {# Tell Lab Reports to construct the CSV File and save a new Report element. #}
 {% do report.build(columnNames, entriesQuery) %}
 ```
@@ -195,7 +194,7 @@ The following template variables are available for use:
 
 #### `craft.labreports.configuredReports`
 
-Query Lab Reports `ReportConfigured` elements by the following criteria:
+Query Lab Reports `ConfiguredReport` elements by the following criteria:
 
 * reportTitle
 * reportType
@@ -207,7 +206,7 @@ Query Lab Reports `ReportConfigured` elements by the following criteria:
 {% set basicReports = craft.labreports.configuredReports
 	.reportType('basic')
 	.orderBy('reportTitle').all() %}
-	
+
 {% set advReports = craft.labreports.configuredReports
 	.reportType('advanced')
 	.orderBy('reportTitle').all() %}
@@ -219,17 +218,17 @@ Query Lab Reports `ReportConfigured` elements by the following criteria:
 Query Lab Reports `Report` elements by the following criteria:
 
 * dateGenerated
-* reportConfiguredId
+* configuredReportId
 * userId
 * filename
 * totalRows
 
 ```
 {% set reports = craft.labreports.generatedReports
-    .reportConfiguredId(6)
+    .configuredReportId(6)
     .dateGenerated('>= ' ~ someDateVar)
     .orderBy('filename').all() %}
-	
+
 {% set reports = craft.labreports.generatedReports
     .userId(4)
     .orderBy('dateGenerated desc').all() %}
