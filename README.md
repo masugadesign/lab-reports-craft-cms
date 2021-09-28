@@ -23,7 +23,7 @@ Custom content/data reporting for Craft CMS.
 Add the following to your composer.json requirements. Be sure to adjust the version number to match the version you wish to install.
 
 ```
-"masugadesign/labreports": "1.0.0",
+"masugadesign/labreports": "1.0.0-RC1",
 ```
 
 ## Configuration
