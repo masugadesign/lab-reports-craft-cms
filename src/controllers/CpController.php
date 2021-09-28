@@ -79,15 +79,15 @@ class CpController extends Controller
 			'template' => $request->getParam('template'),
 			'formatFunction' => $request->getParam('formatFunction'),
 		];
-		$rcId = $request->getParam('configuredReportId');
-		$rc = $this->plugin->reports->saveConfiguredReport($data, $rcId);
-		if ( ! $rc->getErrors() ) {
+		$crId = $request->getParam('configuredReportId');
+		$cr = $this->plugin->reports->saveConfiguredReport($data, $crId);
+		if ( ! $cr->getErrors() ) {
 			$this->setSuccessFlash(Craft::t('labreports', 'Report configured successfully.'));
-			$response = Craft::$app->getResponse()->redirect($rc->getCpEditUrl());
+			$response = Craft::$app->getResponse()->redirect($cr->getCpEditUrl());
 		} else {
 			$this->setFailFlash(Craft::t('labreports', 'Error configuring report.'));
 			Craft::$app->getUrlManager()->setRouteParams([
-				'report' => $rc
+				'report' => $cr
 			]);
 			$response = null;
 		}
@@ -102,12 +102,13 @@ class CpController extends Controller
 	{
 		$queue = Craft::$app->getQueue();
 		$request = Craft::$app->getRequest();
-		$rcId = $request->getParam('id');
-		$rc = $this->plugin->reports->getConfiguredReportById($rcId);
-		if ( ! $rc ) {
-			throw new NotFoundHttpException("Invalid ConfiguredReport ID `{$rcId}`.");
+		$crId = $request->getParam('id');
+		$cr = $this->plugin->reports->getConfiguredReportById($crId);
+		if ( ! $cr ) {
+			$this->plugin->reports->log("Invalid ConfiguredReport ID `{$crId}`.");
+			throw new NotFoundHttpException("Invalid ConfiguredReport ID `{$crId}`.");
 		}
-		$job = new GenerateReport(['configuredReportId' => $rc->id]);
+		$job = new GenerateReport(['configuredReportId' => $cr->id]);
 		$queue->delay(0)->push($job);
 		return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('labreports'));
 	}
@@ -122,7 +123,8 @@ class CpController extends Controller
 		$id = Craft::$app->getRequest()->getParam('id');
 		$report = Report::find()->id($id)->one();
 		if ( ! $report ) {
-			throw new NotFoundHttpException("Invalid Generated Report ID: `{$id}`");
+			$this->plugin->reports->log("Invalid Report ID: `{$id}`");
+			throw new NotFoundHttpException("Invalid Report ID: `{$id}`");
 		}
 		return $this->renderTemplate('labreports/reports-configured/view', ['report' => $report]);
 	}
@@ -137,10 +139,12 @@ class CpController extends Controller
 		$report = Report::find()->id($id)->one();
 		// Check that the Report element actually exists.
 		if ( ! $report ) {
+			$this->plugin->reports->log("Invalid Generated Report ID: `{$id}`");
 			throw new NotFoundHttpException("Invalid Generated Report ID: `{$id}`");
 		}
 		// Make sure the file exists.
 		if ( ! $report->fileExists() ) {
+			$this->plugin->reports->log("Report file `{$report->filePath()}` not found.");
 			throw new NotFoundHttpException("Report file `{$report->filePath()}` not found.");
 		}
 		return Craft::$app->getResponse()->sendFile($report->filePath());

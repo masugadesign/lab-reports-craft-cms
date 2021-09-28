@@ -244,7 +244,8 @@ class ConfiguredReport extends Element
 		} else {
 			$record = ConfiguredReportRecord::findOne($this->id);
 			if (!$record) {
-				throw new Exception('Invalid configured report ID: '.$this->id);
+				$this->plugin->reports->log("Invalid configured report ID: {$this->id}");
+				throw new Exception("Invalid configured report ID: {$this->id}");
 			}
 		}
 		$record->reportType = $this->reportType;

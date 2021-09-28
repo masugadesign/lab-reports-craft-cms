@@ -42,8 +42,8 @@ class ReportsController extends Controller
 			return ExitCode::UNSPECIFIED_ERROR;
 		}
 		$queue = Craft::$app->getQueue();
-		$rc = $plugin->reports->getConfiguredReportById($this->reportId);
-		if ( ! $rc ) {
+		$cr = $plugin->reports->getConfiguredReportById($this->reportId);
+		if ( ! $cr ) {
 			$plugin->reports->log("labreports/reports/build called with invalid `reportId` option.");
 			$this->stderr("Invalid ConfiguredReport ID `{$this->reportId}`.".PHP_EOL);
 			return ExitCode::UNSPECIFIED_ERROR;

@@ -133,12 +133,12 @@ class Report extends Element
 			]
 		];
 		// Fetch all ConfiguredReport elements and add a source for each one.
-		$rcs = ConfiguredReport::find()->orderBy('reportTitle')->all();
-		foreach($rcs as &$rc) {
+		$crs = ConfiguredReport::find()->orderBy('reportTitle')->all();
+		foreach($crs as &$cr) {
 			$sources[] = [
-				'key' => str_replace(' ', '', $rc->reportTitle),
-				'label' => $rc->reportTitle,
-				'criteria' => ['configuredReportId' => $rc->id],
+				'key' => str_replace(' ', '', $cr->reportTitle),
+				'label' => $cr->reportTitle,
+				'criteria' => ['configuredReportId' => $cr->id],
 				'defaultSort' => ['labreports_reports.dateGenerated', 'desc']
 			];
 		}
@@ -193,9 +193,9 @@ class Report extends Element
 				$displayValue = (string) $this->id;
 				break;
 			case 'configuredReport':
-				$rc = $this->getConfiguredReport();
-				if ( $rc ) {
-					$displayValue = "<a href='".$rc->getCpEditUrl()."' >{$rc->reportTitle}</a>";
+				$cr = $this->getConfiguredReport();
+				if ( $cr ) {
+					$displayValue = "<a href='".$cr->getCpEditUrl()."' >{$cr->reportTitle}</a>";
 				} else {
 					$displayValue = (string) 'Unknown';
 				}
@@ -234,7 +234,8 @@ class Report extends Element
 		} else {
 			$record = ReportRecord::findOne($this->id);
 			if (!$record) {
-				throw new Exception('Invalid generated report ID: '.$this->id);
+				$this->plugin->reports->log("Invalid generated report ID: {$this->id}");
+				throw new Exception("Invalid generated report ID: {$this->id}");
 			}
 		}
 		$record->configuredReportId = $this->configuredReportId;
@@ -286,8 +287,8 @@ class Report extends Element
 			$user = $elements[0] ?? null;
 			$this->setUser($user);
 		} elseif ($handle === 'configuredReport') {
-			$rc = $elements[0] ?? null;
-			$this->setConfiguredReport($rc);
+			$cr = $elements[0] ?? null;
+			$this->setConfiguredReport($cr);
 		} else {
 			parent::setEagerLoadedElements($handle, $elements);
 		}
@@ -337,11 +338,11 @@ class Report extends Element
 	public function build($param1, $param2=null): int
 	{
 		$rowsWritten = 0;
-		$rc = $this->getConfiguredReport();
-		if ( ! $rc ) {
+		$cr = $this->getConfiguredReport();
+		if ( ! $cr ) {
 			// @TODO : Throw an exeception because the report is not configured correctly. Log it!
 		}
-		if ( $rc->reportType == 'advanced' ) {
+		if ( $cr->reportType == 'advanced' ) {
 			$rowsWritten = $this->buildAdvancedReport($param1, $param2);
 		} else {
 			$rowsWritten = $this->buildBasicReport($param1);
@@ -359,12 +360,12 @@ class Report extends Element
 	private function buildBasicReport(array $rows): int
 	{
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
-		$rc = $this->getConfiguredReport();
+		$cr = $this->getConfiguredReport();
 		$rowsWritten = 0;
 		$currentTotalRows = $offset = 0;
 		$grandTotalRows = count($rows);
 		if ( $this->plugin->getConfigItem('debug')) {
-			$this->plugin->reports->log("Grand Total Rows : {$grandTotalRows}");
+			$this->plugin->reports->log("[DEBUG] - Grand Total Rows : {$grandTotalRows} (includes column headers)");
 		}
 		foreach($rows as &$row) {
 			$written = $this->addRow($row);
@@ -377,7 +378,7 @@ class Report extends Element
 			}
 		}
 		if ( $this->plugin->getConfigItem('debug') ) {
-			$this->plugin->reports->log("Total Rows : {$rowsWritten} written of {$currentTotalRows} total rows.");
+			$this->plugin->reports->log("[DEBUG] - {$rowsWritten}/{$currentTotalRows} rows written to: ".$this->filePath());
 		}
 		return $rowsWritten;
 	}
@@ -392,18 +393,18 @@ class Report extends Element
 	private function buildAdvancedReport(array $headers, ElementQuery $query): int
 	{
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
-		$rc = $this->getConfiguredReport();
+		$cr = $this->getConfiguredReport();
 		$rowsWritten = 0;
 		$this->addRow($headers);
 		$currentTotalRows = $offset = 0;
 		$grandTotalRows = $query->count();
 		if ( $this->plugin->getConfigItem('debug')) {
-			$this->plugin->reports->log("Grand Total Rows : {$grandTotalRows}");
+			$this->plugin->reports->log("[DEBUG] - Grand Total Rows : {$grandTotalRows} (does NOT include column headers)");
 		}
-		$formatFunction = $this->plugin->reports->formatFunction($rc->formatFunction);
+		$formatFunction = $this->plugin->reports->formatFunction($cr->formatFunction);
 		if ( ! $formatFunction ) {
-			$this->plugin->reports->log("Advanced Report `{$rc->reportTitle}` has Formatting Function Name `{$rc->formatFunction}`.");
-			throw new InvalidConfiguredReportException("Invalid Formatting Function Name `{$rc->formatFunction}`.");
+			$this->plugin->reports->log("Advanced Report `{$cr->reportTitle}` has Formatting Function Name `{$cr->formatFunction}`.");
+			throw new InvalidConfiguredReportException("Invalid Formatting Function Name `{$cr->formatFunction}`.");
 		}
 		do {
 			if ( $this->_queueJob ) {
@@ -412,7 +413,7 @@ class Report extends Element
 			$elements = $query->limit(self::BATCH_LIMIT)->offset($offset)->all();
 			$batchCount = count($elements);
 			if ( $this->plugin->getConfigItem('debug')) {
-				$this->plugin->reports->log("Current batch count : {$batchCount}");
+				$this->plugin->reports->log("[DEBUG] - Current batch count : {$batchCount}");
 			}
 			foreach($elements as &$element) {
 				$row = $formatFunction($element);
@@ -425,7 +426,7 @@ class Report extends Element
 			$offset += self::BATCH_LIMIT;
 		} while ( $batchCount === self::BATCH_LIMIT );
 		if ( $this->plugin->getConfigItem('debug') ) {
-			$this->plugin->reports->log("Total Rows : {$rowsWritten} written of {$currentTotalRows} total rows.");
+			$this->plugin->reports->log("[DEBUG] - {$rowsWritten}/{$currentTotalRows} rows written to: ".$this->filePath());
 		}
 		return $rowsWritten;
 	}
@@ -433,17 +434,17 @@ class Report extends Element
 	/**
 	 * This method writes a report row to a designated filename. The system path
 	 * is determined by the plugin config.
-	 * @param string $filename
 	 * @param array $row
 	 * @return bool
 	 */
-	private function writeRow($filename, $row): bool
+	private function writeRow(array $row): bool
 	{
-		$filePath = $this->plugin->reports->storagePath().DIRECTORY_SEPARATOR.$filename;
 		$lengthWritten = 0;
-		$fp = fopen($filePath, 'a+');
+		$fp = fopen($this->filePath(), 'a+');
 		if ( $fp !== false ) {
 			$lengthWritten = fputcsv($fp, $row, ',');
+		} else {
+			$this->plugin->reports->log("Error writing to file: ".$this->filePath());
 		}
 		fclose($fp);
 		return $lengthWritten > 0;
@@ -474,7 +475,7 @@ class Report extends Element
 	 */
 	public function addRow($row): bool
 	{
-		$success = $this->writeRow($this->filename, $row);
+		$success = $this->writeRow($row);
 		$this->totalRows += $success ? 1 : 0;
 		return $success;
 	}
@@ -528,17 +529,18 @@ class Report extends Element
 
 	/**
 	 * This method sets the related _configuredReport property.
-	 * @param ConfiguredReport $rc
+	 * @param ConfiguredReport $cr
 	 * @return $this
 	 */
-	public function setConfiguredReport(ConfiguredReport $rc)
+	public function setConfiguredReport(ConfiguredReport $cr)
 	{
-		if ( $rc !== null && ! $rc instanceof ConfiguredReport ) {
-			$varType = gettype($rc);
+		if ( $cr !== null && ! $cr instanceof ConfiguredReport ) {
+			$varType = gettype($cr);
+			$this->plugin->reports->log("Report::configuredReport must be an instance of ConfiguredReport. `{$varType}` given.");
 			throw new InvalidConfiguredReportException("Report::configuredReport must be an instance of ConfiguredReport. `{$varType}` given.");
 		}
-		$this->_configuredReport = $rc; // private
-		$this->configuredReportId = $rc->id; // public
+		$this->_configuredReport = $cr; // private
+		$this->configuredReportId = $cr->id; // public
 		// A change to the ConfiguredReport results in a change to the filename.
 		$this->filename = $this->generateFilename();
 		return $this;
@@ -550,14 +552,14 @@ class Report extends Element
 	 */
 	public function getConfiguredReport()
 	{
-		$rc = null;
+		$cr = null;
 		if ( $this->_configuredReport !== null ) {
-			$rc = $this->_configuredReport;
+			$cr = $this->_configuredReport;
 		} elseif ( $this->configuredReportId ) {
-			$rc = ConfiguredReport::find()->id($this->configuredReportId)->one();
-			$this->_configuredReport = $rc;
+			$cr = ConfiguredReport::find()->id($this->configuredReportId)->one();
+			$this->_configuredReport = $cr;
 		}
-		return $rc;
+		return $cr;
 	}
 
 	/**

@@ -2,7 +2,7 @@
 
 Custom content/data reporting for Craft CMS.
 
-### Table of Contents
+## Table of Contents
 
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -13,12 +13,12 @@ Custom content/data reporting for Craft CMS.
 - [Template Variables](#template-variables)
 - [Planned Features](#planned-features)
 
-### Requirements
+## Requirements
 
 * Craft CMS v3.6.0+
 * PHP 7.2.5+
 
-### Installation
+## Installation
 
 Add the following to your composer.json requirements. Be sure to adjust the version number to match the version you wish to install.
 
@@ -26,7 +26,7 @@ Add the following to your composer.json requirements. Be sure to adjust the vers
 "masugadesign/labreports": "1.0.0",
 ```
 
-### Configuration
+## Configuration
 
 To customize your Lab Reports configuration, create a `labreports.php` file in your Craft `config` folder. To start, you may copy the contents of the`config.php` file included in the plugin's `src` folder.
 
@@ -40,13 +40,31 @@ Set debug to _true_ to enable some advanced plugin logging. This can assist in d
 
 This is the array of PHP formatting functions used by the advanced reports.
 
-### Debugging
+```
+<?php
+
+return [
+	'debug' => true,
+
+	'functions' => [
+		'entryDump' => function ($entry) {
+			return [
+				(int) $entry->id,
+				$entry->title,
+				$entry->dateCreated->format('F j, Y g:i a')
+			];
+		}
+	]
+];
+```
+
+## Debugging
 
 Lab Reports writes errors/exceptions to the `storage/logs/labreports.log` file. In some cases, some errors may bypass that log and Craft will write them to the `web.log` or `queue.log` files.
 
-### Report Types
+## Report Types
 
-#### Basic Reports
+### Basic Reports
 
 The basic report is a template-based report geared towards smaller data exports (< 3000 rows). These reports load the entire query result into memory at once when generating the CSV export.
 
@@ -95,13 +113,13 @@ Report Template : _reports/booksBasic
 {% do report.build(rows) %}
 ```
 
-The `report` variable is automatically defined in the template contains a Lab Reports `Report` element instance.
+The `report` variable is automatically defined in the template. It contains a Lab Reports `Report` element instance.
 
-#### Advanced Reports
+### Advanced Reports
 
-The advanced report is a template-based report geared towards larger data exports (>= 3000 rows) with a lot of columns and/or relationships. These reports allow for a developer to define the base element query as well as a PHP formatting function that should be applied to all the query results behind-the-scenes when constructing the report file.
+The advanced report is a template-based report geared towards larger data exports (>= 3000 rows) with a lot of columns and/or relationships. These reports allow for a developer to define an element query (not executed) as well as a PHP formatting function that should be applied to all the query results behind-the-scenes when the plugin is constructing the report file.
 
-**Formatting Functions**
+#### Formatting Functions
 
 The PHP formatting functions should be defined in the `labreports.php` config file's `functions` array. Each function must accept one parameter. The value of the parameter is a Craft Element of whatever type your report is centered around. The name of the variable does not matter. Pay careful attention to the order of each item in the array because it will need to match the order of the column names that you define in the report template.
 
@@ -113,8 +131,8 @@ return [
 	'functions' => [
 		// The function name in this example is "bookDump"
 		'bookDump' => function ($entry) {
-			$author = entry.bookAuthor.one() %}
-			$coverImage = entry.coverImage.one() %}
+			$author = $entry->getFieldValue('bookAuthor')->one();
+			$coverImage = $entry->getFieldValue('coverImage')->one();
 			return [
 				(int) $entry->id,
 				$entry->title,
@@ -131,13 +149,78 @@ return [
 				$asset->filename,
 				(int) $asset->folderId,
 				(int) $asset->volumeId,
-				$asset->getFieldValue('bookAuthor'),
+				$asset->getFieldValue('customFieldHandle'),
 				$asset->getFieldValue('someOtherCustomField')
 			];
 		}
 	],
 
 ];
+```
+
+If you aren't accustomed to coding with PHP, here are some Twig-to-PHP examples that may help you:
+
+**Plain Text / Rich Text / Number**
+
+```
+{# Twig #}
+{% set value = entry.fieldHandle %}
+// PHP
+$value = $entry->getFieldValue('fieldHandle');
+```
+
+**Relationship Field (not eager-loaded)**
+
+```
+{# Twig #}
+{% set relatedEntry = entry.entryFieldHandle.one %}
+// PHP
+$relatedEntry = $entry->getFieldValue('entryFieldHandle')->one();
+```
+
+**Relationship Field (eager-loaded)**
+
+These examples use NULL coalescing operators in case the eager-loaded relationship field has no value.
+
+```
+{# Twig #}
+{% set relatedEntry = entry.entryFieldHandle[0] ?? null %}
+// PHP
+$relatedEntry = $entry->getFieldValue('entryFieldHandle')[0] ?? null;
+```
+
+**Date/Time Field**
+
+```
+{# Twig #}
+{% set formattedDate = entry.postDate|date('F j, Y') %}
+// PHP
+$formattedDate = $entry->postDate->format('F j, Y');
+```
+
+**Dropdown/Radio Fields**
+
+```
+{# Twig #}
+{% set fieldValue = entry.dropdownField %}
+{% set fieldLabel = entry.dropdownField.label %}
+// PHP
+$fieldValue = $entry->getFieldValue('dropdownField')->value;
+$fieldLabel = $entry->getFieldValue('dropdownField')->label;
+
+```
+
+**Checkbox Fields**
+
+The "use" statement should be placed at the top of your labreports.php file.
+
+```
+{# Twig #}
+{% set commaSepValues = entry.checkboxField|join(', ') %}
+// PHP
+use craft\helpers\ArrayHelper;
+
+$commaSepValues = implode(', ', ArrayHelper::getColumn(ArrayHelper::toArray( (array) $entry->getFieldValue('checkboxField') ), 'value'));
 ```
 
 **Configure**
@@ -164,11 +247,11 @@ As an example, we will create an advanced report that exports some entry metadat
 {% do report.build(columnNames, entriesQuery) %}
 ```
 
-Like basic reports, the `report` variable is automatically defined in the template contains a Lab Reports `Report` element instance.
+Like basic reports, the `report` variable is automatically defined in the template and contains a Lab Reports `Report` element instance.
 
-### Running Reports
+## Running Reports
 
-Reports can be generated in multiple ways. In the _Configured Reports_ tab of the Lab Reports control panel area, each configured report has a "Run" link column. Click that link to generate a new report. Reports can also be generated by clicking the "Run" button from a single configured report's control panel edit form.
+Reports can be generated in multiple ways. In the _Configured Reports_ tab of the Lab Reports control panel area, each configured report has a "Run" link column. Click that button link to generate a new report. Reports can also be generated by clicking the "Run" button from a single configured report's control panel edit form.
 
 Another way to generate a new report is to use a console command. Commands like the following example can be set to run periodically via a cron job. Each configured report is a Craft element and has a unique ID, just like any other element. Pass that ID to the command using the `reportId` option.
 

@@ -27,8 +27,8 @@ class GenerateReport extends BaseJob
 	public function init()
 	{
 		$plugin = LabReports::getInstance();
-		$rc = $plugin->reports->getConfiguredReportById($this->configuredReportId);
-		$this->_reportTitle = $rc->reportTitle;
+		$cr = $plugin->reports->getConfiguredReportById($this->configuredReportId);
+		$this->_reportTitle = $cr->reportTitle;
 	}
 
 	/**
@@ -38,8 +38,14 @@ class GenerateReport extends BaseJob
 	{
 		$this->queue =& $queue;
 		$plugin = LabReports::getInstance();
-		$rc = $plugin->reports->getConfiguredReportById($this->configuredReportId);
-		$plugin->reports->run($rc, $this);
+		if ( $plugin->getConfigItem('debug') ) {
+			$plugin->reports->log("[DEBUG] - GenerateReport queue job STARTED.");
+		}
+		$cr = $plugin->reports->getConfiguredReportById($this->configuredReportId);
+		$plugin->reports->run($cr, $this);
+		if ( $plugin->getConfigItem('debug') ) {
+			$plugin->reports->log("[DEBUG] - GenerateReport queue job FINISHED.");
+		}
 	}
 
 	/**

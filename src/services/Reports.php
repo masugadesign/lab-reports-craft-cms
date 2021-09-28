@@ -45,11 +45,14 @@ class Reports extends Service
 
 	/**
 	 * This method executes a particular configured report.
-	 * @param ConfiguredReport $rc
+	 * @param ConfiguredReport $cr
 	 */
-	public function run(ConfiguredReport $rc, $queueJob=null)
+	public function run(ConfiguredReport $cr, $queueJob=null)
 	{
-		$report = (new Report())->setConfiguredReport($rc);
+		if ( $this->plugin->getConfigItem('debug') ) {
+			$this->log("[DEBUG] - Generating `{$cr->reportType}` report for Configured Report `{$cr->reportTitle}`.");
+		}
+		$report = (new Report())->setConfiguredReport($cr);
 		$view = Craft::$app->getView();
 		/*
 		Craft throws craft\errors\UnsupportedSiteException when siteId is null.
@@ -63,37 +66,14 @@ class Reports extends Service
 		$report->updateStatus('in_progress');
 		// When run in the queue, Craft has *not* set the site templates path.
 		$view->setTemplatesPath(Craft::$app->getPath()->getSiteTemplatesPath());
-		$parsedReportTemplate = $view->renderTemplate($rc->template, [
+		if ( $this->plugin->getConfigItem('debug') ) {
+			$this->log("[DEBUG] - Site template path set to : ".Craft::$app->getPath()->getSiteTemplatesPath());
+		}
+		$parsedReportTemplate = $view->renderTemplate($cr->template, [
 			'report' => $report
 		]);
 		$report->updateStatus('finished');
 		return $report->fileExists() ? $report : null;
-	}
-
-	/**
-	 * This method converts an array of elements to a CSV file stored in the Craft
-	 * temp path.
-	 */
-	public function generateCsvFile($entries, $basename)
-	{
-		// Items in the array might be objects, convert the object(s) to an array.
-		$arrayContent = ArrayHelper::toArray($entries);
-		foreach($arrayContent as $rowIndex => &$record) {
-			// Let's add the column names as a row to the CSV array content.
-			if ( $rowIndex === 0 ) {
-				array_unshift($arrayContent, array_keys($record));
-			}
-			// There may be array values in each item array. We need to flatten those.
-			foreach($record as $fieldName => &$fieldValue) {
-				if ( is_array($fieldValue) ) {
-					$fieldValue = json_encode($fieldValue);
-				}
-			}
-		}
-		$csvContent = $this->arrayToCsv($arrayContent);
-		$filePath = Craft::$app->path->getTempPath().DIRECTORY_SEPARATOR.$basename.'.csv';
-		FileHelper::writeToFile($filePath, $csvContent);
-		return file_exists($filePath) ? $filePath : null;
 	}
 
 	/**
@@ -132,20 +112,20 @@ class Reports extends Service
 	 */
 	public function saveConfiguredReport($data, $id=null): ?ConfiguredReport
 	{
-		$rc = $id ? $this->getConfiguredReportById($id) : new ConfiguredReport;
+		$cr = $id ? $this->getConfiguredReportById($id) : new ConfiguredReport;
 		$saved = false;
 		// Check it is populated in case someone supplied a bad ID.
-		if ( $rc ) {
-			$rc->reportType = $data['reportType'] ?? $rc->reportType;
-			$rc->reportTitle = $data['reportTitle'] ?? $rc->reportTitle;
-			$rc->reportDescription = $data['reportDescription'] ?? $rc->reportDescription;
-			$rc->template = $data['template'] ?? $rc->template;
-			$rc->formatFunction = $data['formatFunction'] ?? $rc->formatFunction;
-			$saved = Craft::$app->getElements()->saveElement($rc);
+		if ( $cr ) {
+			$cr->reportType = $data['reportType'] ?? $cr->reportType;
+			$cr->reportTitle = $data['reportTitle'] ?? $cr->reportTitle;
+			$cr->reportDescription = $data['reportDescription'] ?? $cr->reportDescription;
+			$cr->template = $data['template'] ?? $cr->template;
+			$cr->formatFunction = $data['formatFunction'] ?? $cr->formatFunction;
+			$saved = Craft::$app->getElements()->saveElement($cr);
 		} elseif ( $this->plugin->getConfigItem('debug')) {
-			$this->log("ConfiguredReport with ID `{$id}` not found.");
+			$this->log("[DEBUG] - Configured Report with ID `{$id}` not found.");
 		}
-		return $rc;
+		return $cr;
 	}
 
 	/**
