@@ -14,6 +14,9 @@ Custom content/data reporting for Craft CMS.
 	* [Console Command](#console-command)
 	* [Cron Job](#cron-job)
 - [Template Variables](#template-variables)
+- [Element Properties & Methods](#element-properties-methods)
+	* [ConfiguredReport Properties/Methods](#configuredreport)
+	* [Report Properties/Methods](#report)
 - [Planned Features](#planned-features)
 
 ## Requirements
@@ -26,7 +29,7 @@ Custom content/data reporting for Craft CMS.
 Add the following to your composer.json requirements. Be sure to adjust the version number to match the version you wish to install.
 
 ```
-"masugadesign/labreports": "1.0.0-RC1",
+"masugadesign/labreports": "1.0.0-RC2",
 ```
 
 ## Configuration
@@ -35,11 +38,11 @@ To customize your Lab Reports configuration, create a `labreports.php` file in y
 
 Lab Reports has the following config options:
 
-**debug**
+### debug
 
-Set debug to _true_ to enable some advanced plugin logging. This can assist in diagnosing issues with configuring/running reports.
+Set debug to `true` to enable some advanced plugin logging. This can assist in diagnosing issues with configuring/running reports.
 
-**functions**
+### functions
 
 This is the array of PHP formatting functions used by the advanced reports.
 
@@ -64,6 +67,8 @@ return [
 ## Debugging
 
 Lab Reports writes errors/exceptions to the `storage/logs/labreports.log` file. In some cases, some errors may bypass that log and Craft will write them to the `web.log` or `queue.log` files.
+
+When the Lab Reports `debug` configuration option is enabled, the plugin logs additional information. Each debug log line is prefixed with `[DEBUG]`.
 
 ## Basic Reports
 
@@ -118,7 +123,7 @@ The `report` variable is automatically defined in the template. It contains a La
 
 ## Advanced Reports
 
-The advanced report is a template-based report geared towards larger data exports (>= 3000 rows) with a lot of columns and/or relationships. These reports allow for a developer to define an element query (not executed) as well as a PHP formatting function that should be applied to all the query results behind-the-scenes when the plugin is constructing the report file.
+The advanced report is a template-based report geared towards larger data exports (>= 3000 rows) with a lot of columns and/or relationships. These reports allow for a developer to define a Query (not executed) as well as a PHP formatting function that should be applied to all the query results behind-the-scenes when the plugin is constructing the report file.
 
 ### Formatting Functions
 
@@ -369,6 +374,143 @@ It might look like this only with real function names:
 #}
 
 ```
+
+## Element Properties & Methods
+
+### `ConfiguredReport`
+
+These public properties and methods are available on the `ConfiguredReport` elements.
+
+#### Properties
+
+The following properties and methods are publicly on `ConfiguredReport` element objects.
+
+`reportTitle`
+
+Note that it is not just "title". This element type does not make use of Craft's native titles.
+
+`reportType`
+
+The value will either be "basic" or "advanced".
+
+`reportDescription`
+
+The brief description of the report.
+
+`template`
+
+This value is populated with a relative path to the report template.
+
+`formatFunction`
+
+This value contains the name of the PHP format function used if the ConfiguredReport is an advanced report.
+
+#### Methods
+
+`getRunUrl()`
+
+This method returns the _control panel_ "run" URL for the ConfiguredReport. Note that the returned URL will not work for users that do not have permission to access the plugin in the control panel.
+
+`getCpEditUrl()`
+
+This method returns the control panel edit form URL.
+
+`getTotalRan()`
+
+This method returns the total number of times reports have been generated from this configuration.
+
+### `Report`
+
+These public properties and methods are available on the `Report` (generated report) elements.
+
+#### Properties
+
+`configuredReportId`
+
+The related `ConfiguredReport` element ID.
+
+`filename`
+
+The filename of the generated report file.
+
+`totalRows`
+
+The total number of rows that were written to the report file.
+
+`dateGenerated`
+
+The full UTC date/time that the report file was generated.
+
+`reportStatus`
+
+The status label of the generated report. The value may be `in_progress` or `finished`.
+
+`userId`
+
+The ID of the user that generated the report.
+
+#### Methods
+
+`build($param1, $param2)`
+
+This generates the report file. The method parameters vary based on the Report Type. For basic reports, provide the array of report rows including the column headers/labels. For advanced reports, provide the column headers/labels as an array followed by the Query object.
+
+```
+{# Basic Reports (Example) #}
+{% do report.build(rowsArray) %}
+
+{# Advanced Reports (Example) #}
+{% do report.build(columnLabels, entryQuery) %}
+
+```
+
+`addRows(array $rows)`
+
+Provide an array or report row arrays to write them to the report file.
+
+`addRow(array $row)`
+
+Provide a single report row array to be written to the report file.
+
+`filePath()`
+
+This method returns the full system file path to the report file whether or not the file actually exists.
+
+`fileExists()`
+
+This method returns a boolean `true`/`false` denoting whether or not the report file exists.
+
+`setUser(User $user)`
+
+This method sets the report's author to a specified `User` element.
+
+`getUser()`
+
+This method returns the report's author `User` element or `null` if there isn't one.
+
+`setConfiguredReport(ConfiguredReport $cr)`
+
+This method sets the `ConfiguredReport` object on the `Report` element. This governs which configuration will be used when building the report file.
+
+`getConfiguredReport()`
+
+This method returns the report's related `ConfiguredReport` or `null` if there isn't one.
+
+`setQueueJob(GenerateReport $job)`
+
+This method sets the report's queue job so it can update the progress of the job while building the report.
+
+`updateStatus($status)`
+
+This method updates the report's status to a given string (`in_progress`|`finished`) then saves the `Report` element.
+
+`getStatusLabel()`
+
+This returns the status label of the report otherwise `null` if it doesn't have one. The possible values are `In Progress`|`Finished`
+
+`getDownloadUrl()`
+
+This method returns the _control panel_ download URL string for the report file. Note that this  URL will not work for users that do not have control panel access.
 
 ## Planned Features
 
