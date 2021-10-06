@@ -7,6 +7,7 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 use craft\base\Element;
+use craft\db\Query;
 use craft\elements\User;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
@@ -213,7 +214,7 @@ class Report extends Element
 				$displayValue = "<a href='{$url}' ><span data-icon='download' aria-hidden='true'></span> {$this->filename}</a>";
 				break;
 			case 'reportStatus':
-				$displayValue = ucwords($this->$attribute);
+				$displayValue = $this->getStatusLabel();
 				break;
 			default:
 				$displayValue = parent::tableAttributeHtml($attribute);
@@ -322,7 +323,7 @@ class Report extends Element
 	 * This method returns the current local date/time as a DateTime object.
 	 * @return DateTime
 	 */
-	public function currentLocalDate(): DateTime
+	private function currentLocalDate(): DateTime
 	{
 		$date = DateTimeHelper::currentUTCDateTime();
 		$date->setTimeZone( new DateTimeZone(Craft::$app->getTimeZone()) );
@@ -387,10 +388,10 @@ class Report extends Element
 	 * This methods builds the report file based on an array of column headers
 	 * and an element query.
 	 * @param array $headers
-	 * @param ElementQuery $query
+	 * @param Query $query
 	 * @return int
 	 */
-	private function buildAdvancedReport(array $headers, ElementQuery $query): int
+	private function buildAdvancedReport(array $headers, Query $query): int
 	{
 		$this->dateGenerated = DateTimeHelper::currentUTCDateTime()->format(DATE_ATOM);
 		$cr = $this->getConfiguredReport();
@@ -456,7 +457,7 @@ class Report extends Element
 	 * @param array $rows
 	 * @return int
 	 */
-	public function addRows($rows): int
+	public function addRows(array $rows): int
 	{
 		$total = 0;
 		foreach($rows as &$row) {
@@ -473,7 +474,7 @@ class Report extends Element
 	 * @param array $row
 	 * @return bool
 	 */
-	public function addRow($row): bool
+	public function addRow(array $row): bool
 	{
 		$success = $this->writeRow($row);
 		$this->totalRows += $success ? 1 : 0;
@@ -506,7 +507,7 @@ class Report extends Element
 	 * @param User $user
 	 * @return $this
 	 */
-	public function setUser($user)
+	public function setUser(User $user)
 	{
 		$this->_user = $user;
 		return $this;
@@ -581,6 +582,16 @@ class Report extends Element
 	{
 		$this->reportStatus = $status;
 		return Craft::$app->getElements()->saveElement($this);
+	}
+
+	/**
+	 * This method returns the `reportStatus` label.
+	 * @return string|null
+	 */
+	public function getStatusLabel(): ?string
+	{
+		$status = $this->reportStatus ? ucwords(str_replace('_', ' ', $this->reportStatus)) : null;
+		return $status;
 	}
 
 	/**
