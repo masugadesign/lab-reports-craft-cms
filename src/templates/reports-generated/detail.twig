@@ -43,7 +43,7 @@
 		</tr>
 		<tr>
 			<td><strong>Date Generated</strong></td>
-			<td>{{ report.dateGenerated|date('Y-m-d H:i:s')|e }} UTC</td>
+			<td>{{ report.dateGenerated|datetime('Y-m-d g:i a')|e }} UTC</td>
 		</tr>
 		<tr>
 			<td><strong>File Exists?</strong></td>

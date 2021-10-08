@@ -430,8 +430,8 @@ class Report extends Element
 				// Make sure the return value is an array.
 				if ( ! is_array($row) ) {
 					$type = gettype($row);
-					$this->plugin->reports->log("Formatting Function `{$formatFunction}` must return an array. `{$type}` returned instead.");
-					throw new InvalidConfiguredReportException("Formatting Function `{$formatFunction}` must return an array. `{$type}` returned instead.");
+					$this->plugin->reports->log("Formatting Function `{$cr->formatFunction}` must return an array. `{$type}` returned instead.");
+					throw new InvalidConfiguredReportException("Formatting Function `{$cr->formatFunction}` must return an array. `{$type}` returned instead.");
 				}
 				$written = $this->addRow($row);
 				// The count of successfully written rows.
