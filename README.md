@@ -29,7 +29,7 @@ Custom content/data reporting for Craft CMS.
 Add the following to your composer.json requirements. Be sure to adjust the version number to match the version you wish to install.
 
 ```
-"masugadesign/labreports": "1.0.0-RC3",
+"masugadesign/labreports": "1.0.0",
 ```
 
 ## Configuration
@@ -95,7 +95,7 @@ Report Description : A very basic export of all the Books entries.
 Report Template : _reports/booksBasic
 #}
 
-{# Initialize the rows data with the CSV column names. #}
+{# Initialize the rows array by placing an array of column headers/labels in it. #}
 {% set rows = [[
 	'ID',
 	'Title',
@@ -246,15 +246,15 @@ To configure an advanced report, click the "New Report" button from the main Lab
 As an example, we will create an advanced report that exports some entry metadata along with some relationship data. Keep in mind the formatting function is saved to the Configured Report element record and does not appear anywhere in the report template. The report template might look something like the following:
 
 ```
-{# Initialize the rows data with the CSV column names. #}
-{% set columnNames = [[
+{# Create a single array of column headers/labels. #}
+{% set columnNames = [
 	'ID',
 	'Title',
 	'Date Published',
 	'Author',
 	'Cover Image',
 	'Publisher Name'
-]] %}
+] %}
 
 {# Construct an EntryQuery object WITHOUT .limit() or .all(). Do not execute the query here! #}
 {% set entriesQuery = craft.entries.section('books').orderBy('title') %}
@@ -465,7 +465,7 @@ The ID of the user that generated the report.
 
 `build($param1, $param2)`
 
-This generates the report file. The method parameters vary based on the Report Type. For basic reports, provide the array of report rows including the column headers/labels. For advanced reports, provide the column headers/labels as an array followed by the Query object.
+This generates the report file. The method parameters vary based on the Report Type. For basic reports, provide a single array of column headers/labels nested within another array. For advanced reports, provide a single array (not nested in another array) of column headers/labels followed by the Query object.
 
 ```
 {# Basic Reports (Example) #}
@@ -527,4 +527,5 @@ This method returns the _control panel_ download URL string for the report file.
 ## Planned Features
 
 - Graphing tools
+- Other export formats (custom delimiter, XML)
 - Dynamic report parameters
