@@ -30,6 +30,7 @@ class Report extends Element
 	public $totalRows = 0;
 	public $dateGenerated = null;
 	public $reportStatus = null;
+	public $statusMessage = null;
 	public $userId = null;
 
 	public const BATCH_LIMIT = 25;
@@ -160,7 +161,8 @@ class Report extends Element
 			'configuredReport' => Craft::t('labreports', 'Configured Report'),
 			'reportStatus' => Craft::t('labreports', 'Status'),
 			'dateGenerated' => Craft::t('labreports', 'Date Generated'),
-			'totalRows' => Craft::t('labreports', 'Total Rows')
+			'totalRows' => Craft::t('labreports', 'Total Rows'),
+			'download' => Craft::t('labreports', 'Download')
 		];
 	}
 
@@ -169,7 +171,7 @@ class Report extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'filename', 'configuredReport', 'reportStatus', 'dateGenerated', 'totalRows'];
+		return ['id', 'filename', 'configuredReport', 'reportStatus', 'dateGenerated', 'totalRows', 'download'];
 	}
 
 	/**
@@ -210,11 +212,17 @@ class Report extends Element
 				$displayValue = (string) number_format($this->totalRows, 0);
 				break;
 			case 'filename':
-				$url = $this->getDownloadUrl();
-				$displayValue = "<a href='{$url}' ><span data-icon='download' aria-hidden='true'></span> {$this->filename}</a>";
+				$detailUrl = $this->getDetailPageUrl();
+				$displayValue = "<a href='{$detailUrl}' >{$this->filename}</a>";
 				break;
 			case 'reportStatus':
 				$displayValue = $this->getStatusLabel();
+				break;
+			case 'download':
+				$url = $this->getDownloadUrl();
+				$displayValue = $this->fileExists() ?
+					"<a href='{$url}' class='btn' ><span data-icon='download' aria-hidden='true'></span>&nbsp;Download</a>" :
+					'Unavailable';
 				break;
 			default:
 				$displayValue = parent::tableAttributeHtml($attribute);
@@ -241,6 +249,7 @@ class Report extends Element
 		}
 		$record->configuredReportId = $this->configuredReportId;
 		$record->reportStatus = $this->reportStatus;
+		$record->statusMessage = $this->statusMessage;
 		$record->dateGenerated = $this->dateGenerated;
 		$record->filename = $this->filename;
 		$record->totalRows = $this->totalRows;
@@ -418,6 +427,12 @@ class Report extends Element
 			}
 			foreach($elements as &$element) {
 				$row = $formatFunction($element);
+				// Make sure the return value is an array.
+				if ( ! is_array($row) ) {
+					$type = gettype($row);
+					$this->plugin->reports->log("Formatting Function `{$formatFunction}` must return an array. `{$type}` returned instead.");
+					throw new InvalidConfiguredReportException("Formatting Function `{$formatFunction}` must return an array. `{$type}` returned instead.");
+				}
 				$written = $this->addRow($row);
 				// The count of successfully written rows.
 				$rowsWritten += $written ? 1 : 0;
@@ -577,10 +592,12 @@ class Report extends Element
 	/**
 	 * This method updates the status of a report.
 	 * @param string $status
+	 * @param string $message
 	 */
-	public function updateStatus($status): bool
+	public function updateStatus($status, $message=null): bool
 	{
 		$this->reportStatus = $status;
+		$this->statusMessage = $message;
 		return Craft::$app->getElements()->saveElement($this);
 	}
 
@@ -601,6 +618,15 @@ class Report extends Element
 	public function getDownloadUrl(): string
 	{
 		return UrlHelper::cpUrl('labreports/download', ['id' => $this->id]);
+	}
+
+	/**
+	 * This method returns the status page URL for the Report element.
+	 * @return string
+	 */
+	public function getDetailPageUrl(): string
+	{
+		return UrlHelper::cpUrl('labreports/detail', ['id' => $this->id]);
 	}
 
 }

@@ -150,4 +150,23 @@ class CpController extends Controller
 		return Craft::$app->getResponse()->sendFile($report->filePath());
 	}
 
+	/**
+	 * This controller action renders the generated report detail page for a given
+	 * Report element by ID.
+	 * @return Response
+	 */
+	public function actionDetail(): Response
+	{
+		$id = Craft::$app->getRequest()->getParam('id');
+		$report = Report::find()->id($id)->one();
+		// Check that the Report element actually exists.
+		if ( ! $report ) {
+			$this->plugin->reports->log("Invalid Generated Report ID: `{$id}`");
+			throw new NotFoundHttpException("Invalid Generated Report ID: `{$id}`");
+		}
+		return $this->renderTemplate('labreports/reports-generated/detail', [
+			'report' => $report
+		]);
+	}
+
 }

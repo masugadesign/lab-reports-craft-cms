@@ -6,6 +6,7 @@ use Craft;
 use Exception;
 use craft\helpers\ArrayHelper;
 use craft\helpers\FileHelper;
+use craft\web\ErrorHandler;
 use Masuga\LabReports\base\Service;
 use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\elements\ConfiguredReport;
@@ -69,10 +70,16 @@ class Reports extends Service
 		if ( $this->plugin->getConfigItem('debug') ) {
 			$this->log("[DEBUG] - Site template path set to : ".Craft::$app->getPath()->getSiteTemplatesPath());
 		}
-		$parsedReportTemplate = $view->renderTemplate($cr->template, [
-			'report' => $report
-		]);
-		$report->updateStatus('finished');
+		try {
+			$parsedReportTemplate = $view->renderTemplate($cr->template, [
+				'report' => $report
+			]);
+			$report->updateStatus('finished');
+		} catch (Exception $e) {
+			$statusMessage = ErrorHandler::convertExceptionToVerboseString($e);
+			$this->log("Exception occurred while generating `{$cr->reportTitle}` report : ".$statusMessage);
+			$report->updateStatus('error', $statusMessage);
+		}
 		return $report->fileExists() ? $report : null;
 	}
 

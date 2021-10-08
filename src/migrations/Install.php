@@ -29,6 +29,7 @@ class Install extends Migration
 				'id' => $this->primaryKey(),
 				'configuredReportId' => $this->integer(),
 				'reportStatus' => $this->string(25),
+				'statusMessage' => $this->text(),
 				'filename' => $this->string(255),
 				'totalRows' => $this->integer(),
 				'userId' => $this->integer(),

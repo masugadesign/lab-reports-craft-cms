@@ -14,6 +14,7 @@ class ReportQuery extends ElementQuery
 	public $dateGenerated = null;
 	public $configuredReportId = null;
 	public $reportStatus = null;
+	public $statusMessage = null;
 	public $filename = null;
 	public $totalRows = null;
 	public $userId = null;
@@ -50,6 +51,7 @@ class ReportQuery extends ElementQuery
 			'labreports_reports.dateGenerated',
 			'labreports_reports.configuredReportId',
 			'labreports_reports.reportStatus',
+			'labreports_reports.statusMessage',
 			'labreports_reports.filename',
 			'labreports_reports.totalRows',
 			'labreports_reports.userId',

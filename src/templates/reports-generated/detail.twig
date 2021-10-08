@@ -1,0 +1,76 @@
+{% extends "_layouts/cp" %}
+{% set title = "Report Detail" %}
+{% import "_includes/forms" as forms %}
+
+{% set crumbs = {
+	configuredreports: { label: "Lab Reports"|t, url: url('labreports') },
+	generatedreports: { label: "Generated Reports"|t, url: url('labreports/generated-reports') }
+} %}
+
+{% block content %}
+
+{% set cr = report.getConfiguredReport() %}
+{% set author = report.getUser() %}
+
+<h2>Report Attributes</h2>
+<table class="data collapsible">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Value</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><strong>ID</strong></td>
+			<td>{{ report.id }}</td>
+		</tr>
+		<tr>
+			<td><strong>Configured Report</strong></td>
+			<td>{% if cr %}<a href="{{ cr.getCpEditUrl }}" >{{ cr.reportTitle|e }}</a>{% else %}Unknown{% endif %}</td>
+		</tr>
+		<tr>
+			<td><strong>Report Author</strong></td>
+			<td>{{ author ? author.email : 'Unknown' }}</td>
+		</tr>
+		<tr>
+			<td><strong>Filename</strong></td>
+			<td>{{ report.filename|e }}</td>
+		</tr>
+		<tr>
+			<td><strong>Report Status</strong></td>
+			<td><span class="{{ report.getStatusLabel == 'Error' ? 'error' : '' }}" >{{ report.getStatusLabel|e }}</span></td>
+		</tr>
+		<tr>
+			<td><strong>Date Generated</strong></td>
+			<td>{{ report.dateGenerated|date('Y-m-d H:i:s')|e }} UTC</td>
+		</tr>
+		<tr>
+			<td><strong>File Exists?</strong></td>
+			<td>{{ report.fileExists ? 'Yes' : 'No' }}</td>
+		</tr>
+		<tr>
+			<td><strong>Total Rows</strong></td>
+			<td>{{ report.totalRows|number_format(0) }}</td>
+		</tr>
+		<tr>
+			<td><strong>Download</strong></td>
+			<td>
+			{% if report.fileExists %}
+				<a href="{{ report.getDownloadUrl() }}" class="btn" >Download</a>
+			{% else %}
+				Unavailable (File Missing)
+			{% endif %}
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+{% if report.statusMessage %}
+<h2>Status Message</h2>
+<div class="pane" >
+	<pre><code>{{ report.statusMessage|e }}</code></pre>
+</div>
+{% endif %}
+
+{% endblock %}

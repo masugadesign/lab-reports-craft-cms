@@ -42,6 +42,10 @@ Lab Reports has the following config options:
 
 Set debug to `true` to enable some advanced plugin logging. This can assist in diagnosing issues with configuring/running reports.
 
+### fileStorageFolder
+
+Specify a full system path to a _writable_ folder without a trailing slash. Lab Reports will store the generated report files there. Do not include this item in the plugin config file if you do not wish to override the default location which is a "labreports" subfolder in the Craft storage folder.
+
 ### functions
 
 This is the array of PHP formatting functions used by the advanced reports.
@@ -51,6 +55,8 @@ This is the array of PHP formatting functions used by the advanced reports.
 
 return [
 	'debug' => true,
+	
+	'fileStorageFolder' => '/home/ubuntu/sites/example.com/reports',
 
 	'functions' => [
 		'entryDump' => function ($entry) {
@@ -66,9 +72,11 @@ return [
 
 ## Debugging
 
-Lab Reports writes errors/exceptions to the `storage/logs/labreports.log` file. In some cases, some errors may bypass that log and Craft will write them to the `web.log` or `queue.log` files.
+Lab Reports writes most errors/exceptions to the `storage/logs/labreports.log` file. In some cases, some errors may bypass that log and Craft will write them to the `web.log` or `queue.log` files.
 
 When the Lab Reports `debug` configuration option is enabled, the plugin logs additional information. Each debug log line is prefixed with `[DEBUG]`.
+
+Errors/Exceptions that occur during the report build process are stored in the `Report` element's `statusMessage` property. The value is displayed on the `Report` detail page in the control panel. Any report build that results in an "error" status should have a `statusMessage` value which may be helpful in diagnosing issues with the report template or configuration.
 
 ## Basic Reports
 
@@ -127,7 +135,7 @@ The advanced report is a template-based report geared towards larger data export
 
 ### Formatting Functions
 
-The PHP formatting functions should be defined in the `labreports.php` config file's `functions` array. Each function must accept one parameter. The value of the parameter is a Craft Element of whatever type your report is centered around. The name of the variable does not matter. Pay careful attention to the order of each item in the array because it will need to match the order of the column names that you define in the report template.
+The PHP formatting functions should be defined in the `labreports.php` config file's `functions` array. Each function must accept one parameter. The value of the parameter is a Craft Element of whatever type your report is centered around. The name of the variable does not matter. The function must return a single array which represents one row in the report. Pay careful attention to the order of each item in the array because it will need to match the order of the column names that you define in the report template.
 
 ```
 <?php
@@ -444,6 +452,10 @@ The full UTC date/time that the report file was generated.
 `reportStatus`
 
 The status label of the generated report. The value may be `in_progress` or `finished`.
+
+`statusMessage`
+
+A textual status message that may be populated when errors occur.
 
 `userId`
 
