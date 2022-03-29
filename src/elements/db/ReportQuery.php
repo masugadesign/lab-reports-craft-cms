@@ -30,9 +30,9 @@ class ReportQuery extends ElementQuery
 	/**
  	* @inheritdoc
  	*/
-	protected $defaultOrderBy = ['labreports_reports.dateGenerated' => SORT_DESC];
+	protected array $defaultOrderBy = ['labreports_reports.dateGenerated' => SORT_DESC];
 
-	public function init()
+	public function init(): void
 	{
 		parent::init();
 		$this->plugin = LabReports::getInstance();

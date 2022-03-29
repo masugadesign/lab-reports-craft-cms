@@ -65,7 +65,7 @@ class Report extends Element
 	 */
 	private $plugin = null;
 
-	public function init()
+	public function init(): void
 	{
 		parent::init();
 		$this->plugin = LabReports::getInstance();
@@ -235,7 +235,7 @@ class Report extends Element
  	* @inheritdoc
  	* @throws Exception if existing record is not found.
  	*/
-	public function afterSave(bool $isNew)
+	public function afterSave(bool $isNew): void
 	{
 		if ( $isNew ) {
 			$record = new ReportRecord;
@@ -261,7 +261,7 @@ class Report extends Element
 	/**
 	 * @inheritdoc
 	 */
-	public static function eagerLoadingMap(array $sourceElements, string $handle)
+	public static function eagerLoadingMap(array $sourceElements, string $handle): array|false|null
 	{
 		$sourceElementIds = ArrayHelper::getColumn($sourceElements, 'id');
 		if ($handle === 'user') {
@@ -291,7 +291,7 @@ class Report extends Element
 	/**
 	 * @inheritdoc
 	 */
-	public function setEagerLoadedElements(string $handle, array $elements)
+	public function setEagerLoadedElements(string $handle, array $elements): void
 	{
 		if ($handle === 'user') {
 			$user = $elements[0] ?? null;

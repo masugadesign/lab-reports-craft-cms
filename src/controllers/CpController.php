@@ -23,7 +23,7 @@ class CpController extends Controller
 	 */
 	private $plugin = null;
 
-	public function init()
+	public function init(): void
 	{
 		parent::init();
 		$this->plugin = LabReports::getInstance();
@@ -109,6 +109,8 @@ class CpController extends Controller
 			throw new NotFoundHttpException("Invalid ConfiguredReport ID `{$crId}`.");
 		}
 		$job = new GenerateReport(['configuredReportId' => $cr->id]);
+		// It appears Craft is not initializing this on its own anymore?
+		$job->init();
 		$queue->delay(0)->push($job);
 		return Craft::$app->getResponse()->redirect(UrlHelper::cpUrl('labreports'));
 	}

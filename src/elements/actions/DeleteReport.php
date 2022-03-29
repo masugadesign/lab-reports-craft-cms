@@ -21,7 +21,7 @@ class DeleteReport extends ElementAction
 	 */
 	public $successMessage;
 
-	public function init()
+	public function init(): void
 	{
 		$this->confirmationMessage = Craft::t('labreports', 'Are you sure you want to delete the selected Lab Reports elements and files?');
 		$this->successMessage = Craft::t('labreports', 'Reports deleted.');
@@ -49,7 +49,7 @@ class DeleteReport extends ElementAction
 	 * @inheritDoc IElementAction::getConfirmationMessage()
 	 * @return string|null
 	 */
-	public function getConfirmationMessage()
+	public function getConfirmationMessage(): ?string
 	{
 		return $this->confirmationMessage;
 	}

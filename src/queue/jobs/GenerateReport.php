@@ -24,8 +24,9 @@ class GenerateReport extends BaseJob
 
 	private $_reportTitle = null;
 
-	public function init()
+	public function init(): void
 	{
+		parent::init();
 		$plugin = LabReports::getInstance();
 		$cr = $plugin->reports->getConfiguredReportById($this->configuredReportId);
 		$this->_reportTitle = $cr->reportTitle;
@@ -34,7 +35,7 @@ class GenerateReport extends BaseJob
 	/**
 	 * @inheritdoc
 	 */
-	public function execute($queue)
+	public function execute($queue): void
 	{
 		$this->queue =& $queue;
 		$plugin = LabReports::getInstance();
@@ -63,7 +64,7 @@ class GenerateReport extends BaseJob
 	 * The description that gets stored in the queue record.
 	 * @return string
 	 */
-	protected function defaultDescription(): string
+	protected function defaultDescription(): ?string
 	{
 		return "Generating '{$this->_reportTitle}' report.";
 	}

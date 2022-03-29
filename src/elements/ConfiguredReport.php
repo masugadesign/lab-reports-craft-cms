@@ -30,7 +30,7 @@ class ConfiguredReport extends Element
 	 */
 	private $plugin = null;
 
-	public function init()
+	public function init(): void
 	{
 		parent::init();
 		$this->plugin = LabReports::getInstance();
@@ -170,7 +170,7 @@ class ConfiguredReport extends Element
 	 * This method returns the single report CP edit form URL.
 	 * @return string
 	 */
-	public function getCpEditUrl()
+	public function getCpEditUrl(): ?string
 	{
 		return UrlHelper::cpUrl('labreports/configure', ['id' => $this->id]);
 	}
@@ -236,7 +236,7 @@ class ConfiguredReport extends Element
  	* @inheritdoc
  	* @throws Exception if existing record is not found.
  	*/
-	public function afterSave(bool $isNew)
+	public function afterSave(bool $isNew): void
 	{
 		if ( $isNew ) {
 			$record = new ConfiguredReportRecord;
