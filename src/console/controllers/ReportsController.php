@@ -49,6 +49,7 @@ class ReportsController extends Controller
 			return ExitCode::UNSPECIFIED_ERROR;
 		}
 		$job = new GenerateReport(['configuredReportId' => $this->reportId]);
+		$job->init();
 		$queue->delay(0)->push($job);
 		return ExitCode::OK;
 	}

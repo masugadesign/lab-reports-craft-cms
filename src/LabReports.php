@@ -7,7 +7,6 @@ use craft\base\Plugin;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterUrlRulesEvent;
-use craft\log\FileTarget;
 use craft\services\Dashboard;
 use craft\services\Plugins;
 use craft\web\twig\variables\CraftVariable;
@@ -26,13 +25,13 @@ class LabReports extends Plugin
 	 * index template by default.
 	 * @var boolean
 	 */
-	public $hasCpSection = true;
+	public bool $hasCpSection = true;
 
 	/**
 	 * Enables the plugin settings form.
 	 * @var boolean
 	 */
-	public $hasCpSettings = true;
+	public bool $hasCpSettings = true;
 
 	/**
 	 * The default config file array.
@@ -64,7 +63,7 @@ class LabReports extends Plugin
 	 * This method returns the settings form HTML content.
 	 * @return string
 	 */
-	protected function settingsHtml(): string
+	protected function settingsHtml(): ?string
 	{
 		return Craft::$app->getView()->renderTemplate('labreports/_settings', []);
 	}
@@ -73,7 +72,7 @@ class LabReports extends Plugin
 	 * This method returns the plugin's Settings model instance.
 	 * @return Settings
 	 */
-	protected function createSettingsModel(): Settings
+	protected function createSettingsModel(): ?\craft\base\Model
 	{
 		return new Settings();
 	}
@@ -90,11 +89,6 @@ class LabReports extends Plugin
 		// Initialize each of the services used by this plugin.
 		$this->setComponents([
 			'reports' => Reports::class
-		]);
-		// Register the Lab Reports plugin log though we probably won't use this.
-		$fileTarget = new FileTarget([
-			'logFile' => Craft::$app->getPath()->getLogPath().'/labreports.log',
-			'categories' => ['labreports']
 		]);
 		// Load the template variables class.
 		Event::on(CraftVariable::class, CraftVariable::EVENT_INIT, function (Event $event) {

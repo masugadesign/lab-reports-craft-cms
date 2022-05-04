@@ -11,7 +11,7 @@ class Settings extends Model
 
 	public $functions = [];
 
-	public function init()
+	public function init(): void
 	{
 		parent::init();
 		$this->fileStorageFolder = Craft::$app->getPath()->getStoragePath().DIRECTORY_SEPARATOR.'labreports';
