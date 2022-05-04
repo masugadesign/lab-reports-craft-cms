@@ -1,11 +1,11 @@
 {
   "name": "masugadesign/labreports",
   "description": "Custom content/data reporting for Craft CMS.",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "craft-plugin",
   "minimum-stability": "dev",
   "require": {
-    "craftcms/cms": "^4.0.0-beta.1"
+    "craftcms/cms": "^4.0.0"
   },
   "autoload": {
     "psr-4": {
