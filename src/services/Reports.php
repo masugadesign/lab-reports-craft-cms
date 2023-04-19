@@ -66,7 +66,8 @@ class Reports extends Service
 		$report->setQueueJob($queueJob);
 		$report->updateStatus('in_progress');
 		// When run in the queue, Craft has *not* set the site templates path.
-		$view->setTemplatesPath(Craft::$app->getPath()->getSiteTemplatesPath());
+		//$view->setTemplatesPath(Craft::$app->getPath()->getSiteTemplatesPath());
+		$view->setTemplateMode(\craft\web\View::TEMPLATE_MODE_SITE);
 		if ( $this->plugin->getConfigItem('debug') ) {
 			$this->log("[DEBUG] - Site template path set to : ".Craft::$app->getPath()->getSiteTemplatesPath());
 		}
