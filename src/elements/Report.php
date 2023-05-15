@@ -305,9 +305,9 @@ class Report extends Element
 	}
 
 	/**
-     * @inheritdoc
-     * @return EntryQuery The newly created [[EntryQuery]] instance.
-     */
+	 * @inheritdoc
+	 * @return EntryQuery The newly created [[EntryQuery]] instance.
+	 */
 	public static function find(): ElementQueryInterface
 	{
 		return new ReportQuery(static::class);
@@ -627,6 +627,46 @@ class Report extends Element
 	public function getDetailPageUrl(): string
 	{
 		return UrlHelper::cpUrl('labreports/detail', ['id' => $this->id]);
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canSave(User $user): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canView(User $user): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canDelete(User $user): bool
+	{
+		return true;
+	}
+
+	/**
+	 * This action should not be available but Craft 4 adds it for some silly reason.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canDuplicate(User $user): bool
+	{
+		return false;
 	}
 
 }

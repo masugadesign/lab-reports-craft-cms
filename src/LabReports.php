@@ -6,12 +6,15 @@ use Craft;
 use craft\base\Plugin;
 use craft\events\PluginEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterElementActionsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\services\Dashboard;
 use craft\services\Plugins;
 use craft\web\twig\variables\CraftVariable;
 use craft\web\UrlManager;
 use craft\web\View;
+use Masuga\LabReports\elements\ConfiguredReport;
+use Masuga\LabReports\elements\Report;
 use Masuga\LabReports\models\Settings;
 use Masuga\LabReports\services\Reports;
 use Masuga\LabReports\variables\LabReportsVariable;
@@ -103,6 +106,18 @@ class LabReports extends Plugin
 			$event->rules['labreports/generated-reports'] = 'labreports/cp/generated-reports';
 			$event->rules['labreports/download'] = 'labreports/cp/download';
 			$event->rules['labreports/detail'] = 'labreports/cp/detail';
+		});
+		Event::on(ConfiguredReport::class, ConfiguredReport::EVENT_REGISTER_ACTIONS, function(RegisterElementActionsEvent $event) {
+			$source = $event->source;
+			$actions = $event->actions;
+			// Remove the default `Edit` action. Totally uncalled for. Craft 4 adds it. Why?
+			unset($event->actions[0]);
+		});
+		Event::on(Report::class, Report::EVENT_REGISTER_ACTIONS, function(RegisterElementActionsEvent $event) {
+			$source = $event->source;
+			$actions = $event->actions;
+			// Remove the default `Edit` and `Duplicate` actions. Totally uncalled for. Craft 4 adds them. Why?
+			unset($event->actions[0], $event->actions[1]);
 		});
 	}
 

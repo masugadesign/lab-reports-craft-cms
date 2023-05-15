@@ -5,10 +5,11 @@ namespace Masuga\LabReports\elements\actions;
 use Craft;
 use craft\base\ElementAction;
 use craft\base\ElementActionInterface;
+use craft\elements\actions\DeleteActionInterface;
 use craft\elements\db\ElementQueryInterface;
 use Masuga\LabReports\LabReports;
 
-class DeleteReport extends ElementAction
+class DeleteReport extends ElementAction implements DeleteActionInterface
 {
 
 	/**
@@ -67,5 +68,21 @@ class DeleteReport extends ElementAction
 		$this->setMessage("{$total} Lab Report elements/files deleted.");
 		return true;
 	}
+
+	/**
+     * @inheritdoc
+     */
+    public function canHardDelete(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setHardDelete(): void
+    {
+        $this->hard = true;
+    }
 
 }

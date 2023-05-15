@@ -7,11 +7,12 @@ use Exception;
 use craft\base\Element;
 use craft\elements\actions\Delete;
 use craft\elements\db\ElementQueryInterface;
+use craft\elements\User;
 use craft\helpers\UrlHelper;
 use Masuga\LabReports\LabReports;
 use Masuga\LabReports\elements\Report;
+use Masuga\LabReports\elements\actions\EditConfiguredReport;
 use Masuga\LabReports\elements\db\ConfiguredReportQuery;
-use Masuga\LabReports\elements\actions\ConfiguredReportDelete;
 use Masuga\LabReports\records\ConfiguredReportRecord;
 
 class ConfiguredReport extends Element
@@ -214,6 +215,7 @@ class ConfiguredReport extends Element
 	protected static function defineActions(string $source = null): array
 	{
 		return [
+			//EditConfiguredReport::class,
 			Delete::class
 		];
 	}
@@ -273,6 +275,46 @@ class ConfiguredReport extends Element
 			}
 		}
 		return $total;
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canSave(User $user): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canDuplicate(User $user): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canView(User $user): bool
+	{
+		return true;
+	}
+
+	/**
+	 * Just here to make sure people with permission to use the plugin can still use it.
+	 * @param User $user
+	 * @return bool
+	 */
+	public function canDelete(User $user): bool
+	{
+		return true;
 	}
 
 }
