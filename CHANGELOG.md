@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.3 - 2023-05-15
+
+- Fixed element action permission issues arising from changes in Craft 4.3. [#5](https://github.com/masugadesign/lab-reports-craft-cms/issues/5)
+- Removed some irrelevant element actions that Craft 4 was injecting by default.
+
 ## 2.0.2 - 2023-04-19
 
 ### Fixed
