@@ -1,6 +1,8 @@
 # Lab Reports for Craft CMS
 
-Custom content/data reporting for Craft CMS.
+> [!WARNING]
+> This is a discontinued commercial plugin and should not be installed without a previously purchased license.
+> For more information, see: https://www.gomasuga.com/blog/discontinuing-craft-plugin-sales
 
 ## Table of Contents
 
