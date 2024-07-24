@@ -107,7 +107,10 @@ class Report extends Element
      */
     public function getUiLabel(): string
     {
-        return 'Uh oh';
+		$cr = $this->getConfiguredReport();
+		$uiLabel = $cr ? $cr->reportTitle : 'Deleted Configuration';
+		$uiLabel .= ' '.$cr->dateCreated->format('Y-m-d H:i');
+        return $uiLabel;
     }
 
 	/**
@@ -181,7 +184,7 @@ class Report extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'filename', 'configuredReport', 'reportStatus', 'dateGenerated', 'totalRows', 'download'];
+		return ['id', 'filename', 'reportStatus', 'dateGenerated', 'totalRows', 'download'];
 	}
 
 	/**
