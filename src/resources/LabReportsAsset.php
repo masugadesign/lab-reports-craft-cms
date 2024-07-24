@@ -6,18 +6,18 @@ use craft\web\assets\cp\CpAsset;
 
 class LabReportsAsset extends AssetBundle
 {
-	public function init()
-	{
-		$this->sourcePath = '@Masuga/LabReports/resources';
+    public function init()
+    {
+        $this->sourcePath = '@Masuga/LabReports/resources';
 
-		$this->depends = [
-			CpAsset::class,
-		];
+        $this->depends = [
+            CpAsset::class,
+        ];
 
-		$this->js = [
-			'script.js',
-		];
+        $this->js = [
+            'script.js',
+        ];
 
-		parent::init();
-	}
+        parent::init();
+    }
 }

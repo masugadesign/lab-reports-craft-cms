@@ -3,24 +3,24 @@
 {% set elementType = 'Masuga\\LabReports\\elements\\ConfiguredReport' %}
 
 {% set tabs = {
-	configuredreports: { label: "Configured Reports"|t, url: url('labreports') },
-	generatedReports: { label: "Generated Reports"|t, url: url('labreports/generated-reports') }
+    configuredreports: { label: "Configured Reports"|t, url: url('labreports') },
+    generatedReports: { label: "Generated Reports"|t, url: url('labreports/generated-reports') }
 } %}
 
 {% set selectedTab = 'configuredreports' %}
 
 {% set crumbs = {
-	configuredreports: { label: "Lab Reports"|t, url: url('labreports') }
+    configuredreports: { label: "Lab Reports"|t, url: url('labreports') }
 } %}
 
 {% block sidebar %}
-	<div class="buttons">
-		<a class="btn submit add icon" href="{{ url('labreports/configure') }}">{{ "New Report"|t }}</a>
-		<div class="menu">
-			<ul>
-				<li></li>
-			</ul>
-		</div>
-	</div>
-	{{ parent() }}
+    <div class="buttons">
+        <a class="btn submit add icon" href="{{ url('labreports/configure') }}">{{ "New Report"|t }}</a>
+        <div class="menu">
+            <ul>
+                <li></li>
+            </ul>
+        </div>
+    </div>
+    {{ parent() }}
 {% endblock %}

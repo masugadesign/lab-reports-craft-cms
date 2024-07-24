@@ -3,23 +3,23 @@
 {% set elementType = 'Masuga\\LabReports\\elements\\Report' %}
 
 {% set tabs = {
-	configuredreports: { label: "Configured Reports"|t, url: url('labreports') },
-	generatedReports: { label: "Generated Reports"|t, url: url('labreports/generated-reports') }
+    configuredreports: { label: "Configured Reports"|t, url: url('labreports') },
+    generatedReports: { label: "Generated Reports"|t, url: url('labreports/generated-reports') }
 } %}
 
 {% set selectedTab = 'generatedReports' %}
 
 {% set crumbs = {
-	configuredreports: { label: "Lab Reports"|t, url: url('labreports') }
+    configuredreports: { label: "Lab Reports"|t, url: url('labreports') }
 } %}
 
 {% block sidebar %}
-	<div class="buttons">
-		<div class="menu">
-			<ul>
-				<li></li>
-			</ul>
-		</div>
-	</div>
-	{{ parent() }}
+    <div class="buttons">
+        <div class="menu">
+            <ul>
+                <li></li>
+            </ul>
+        </div>
+    </div>
+    {{ parent() }}
 {% endblock %}
