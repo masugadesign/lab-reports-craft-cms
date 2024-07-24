@@ -88,15 +88,18 @@ class Reports extends Service
      * This method converts an array of arrays content to a CSV string.
      * @param array
      * @return string
+     * @deprecated 5.0.0 This method was never used in the final version of the plugin and will be removed in v5.1.0.
      */
     public function arrayToCsv($arr=[]): string
     {
         ob_start();
-        $f = fopen('php://output', 'w') or show_error("Can't open php://output");
-        foreach ($arr as &$line) {
-            fputcsv($f, $line, ',');
+        $f = fopen('php://output', 'w');
+        if ( $f !== false ) {
+            foreach ($arr as &$line) {
+                fputcsv($f, $line, ',');
+            }
+            fclose($f);
         }
-        fclose($f) or show_error("Can't close php://output");
         $csvContent = ob_get_contents();
         ob_end_clean();
         return (string) $csvContent;
