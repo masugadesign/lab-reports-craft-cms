@@ -12,6 +12,7 @@ use craft\elements\User;
 use craft\elements\db\EagerLoadPlan;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
+use craft\helpers\ArrayHelper;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
