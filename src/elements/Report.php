@@ -9,6 +9,7 @@ use Exception;
 use craft\base\Element;
 use craft\db\Query;
 use craft\elements\User;
+use craft\elements\db\EagerLoadPlan;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\ElementQueryInterface;
 use craft\helpers\DateTimeHelper;
@@ -32,6 +33,7 @@ class Report extends Element
 	public $reportStatus = null;
 	public $statusMessage = null;
 	public $userId = null;
+	public $download = null;
 
 	public const BATCH_LIMIT = 25;
 
@@ -99,6 +101,14 @@ class Report extends Element
 	{
 		return false;
 	}
+
+	/**
+     * @inheritdoc
+     */
+    public function getUiLabel(): string
+    {
+        return 'Uh oh';
+    }
 
 	/**
 	 * @inheritdoc
@@ -188,7 +198,7 @@ class Report extends Element
 	/**
 	 * @inheritdoc
 	 */
-	protected function tableAttributeHtml(string $attribute): string
+	protected function attributeHtml(string $attribute): string
 	{
 		$displayValue = '';
 		switch ($attribute) {
@@ -225,7 +235,7 @@ class Report extends Element
 					'Unavailable';
 				break;
 			default:
-				$displayValue = parent::tableAttributeHtml($attribute);
+				$displayValue = parent::attributeHtml($attribute);
 				break;
 		}
 		return (string) $displayValue;
@@ -291,7 +301,7 @@ class Report extends Element
 	/**
 	 * @inheritdoc
 	 */
-	public function setEagerLoadedElements(string $handle, array $elements): void
+	public function setEagerLoadedElements(string $handle, array $elements, EagerLoadPlan $plan): void
 	{
 		if ($handle === 'user') {
 			$user = $elements[0] ?? null;
@@ -300,7 +310,7 @@ class Report extends Element
 			$cr = $elements[0] ?? null;
 			$this->setConfiguredReport($cr);
 		} else {
-			parent::setEagerLoadedElements($handle, $elements);
+			parent::setEagerLoadedElements($handle, $elements, $plan);
 		}
 	}
 

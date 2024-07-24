@@ -75,6 +75,14 @@ class ConfiguredReport extends Element
 	}
 
 	/**
+     * @inheritdoc
+     */
+    public function getUiLabel(): string
+    {
+        return $this->reportTitle;
+    }
+
+	/**
 	 * @inheritdoc
 	 */
 	public static function isLocalized(): bool
@@ -133,7 +141,7 @@ class ConfiguredReport extends Element
 	 */
 	protected static function defineDefaultTableAttributes(string $source): array
 	{
-		return ['id', 'reportTitle', 'reportType', 'reportDescription', 'totalRan', 'runUrl'];
+		return ['id', 'reportType', 'reportDescription', 'totalRan', 'runUrl'];
 	}
 
 	/**
@@ -179,7 +187,7 @@ class ConfiguredReport extends Element
 	/**
 	 * @inheritdoc
 	 */
-	protected function tableAttributeHtml(string $attribute): string
+	protected function attributeHtml(string $attribute): string
 	{
 		$displayValue = '';
 		switch ($attribute) {
@@ -201,7 +209,7 @@ class ConfiguredReport extends Element
 				$displayValue = "<a href='{$url}' class='btn' >Run</a>";
 				break;
 			default:
-				$displayValue = parent::tableAttributeHtml($attribute);
+				$displayValue = parent::attributeHtml($attribute);
 				break;
 		}
 		return (string) $displayValue;

@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.0.0
+
+- Added support for Craft 5.
+
 ## 2.0.3 - 2023-05-15
 
 - Fixed element action permission issues arising from changes in Craft 4.3. [#5](https://github.com/masugadesign/lab-reports-craft-cms/issues/5)

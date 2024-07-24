@@ -1,9 +1,5 @@
 # Lab Reports for Craft CMS
 
-> [!WARNING]
-> This is a discontinued commercial plugin and should not be installed without a previously purchased license.
-> For more information, see: https://www.gomasuga.com/blog/discontinuing-craft-plugin-sales
-
 ## Table of Contents
 
 - [Requirements](#requirements)
@@ -23,15 +19,15 @@
 
 ## Requirements
 
-* Craft CMS v4.0.0+
-* PHP 8.0.2+
+* Craft CMS v5.0.0+
+* PHP 8.2+
 
 ## Installation
 
 Add the following to your composer.json requirements. Be sure to adjust the version number to match the version you wish to install.
 
 ```
-"masugadesign/labreports": "2.0.3",
+"masugadesign/labreports": "5.0.0",
 ```
 
 ## Configuration
