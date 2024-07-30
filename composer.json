@@ -1,7 +1,7 @@
 {
   "name": "masugadesign/labreports",
   "description": "Custom content/data reporting for Craft CMS.",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "type": "craft-plugin",
   "minimum-stability": "dev",
   "require": {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.0.1 - 2024-07-30
+
+- Replaced the icon.svg with the updated design.
+
 ## 5.0.0 - 2024-07-25
 
 - Added support for Craft 5.
